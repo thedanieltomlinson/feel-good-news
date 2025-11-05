@@ -23,7 +23,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 100%;
             margin: 0 auto;
             background: white;
             border-radius: 8px;
@@ -43,8 +43,28 @@
             font-weight: 700;
         }
 
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: row;
+            min-height: calc(100vh - 200px);
+        }
+
         .form-section {
+            flex: 1;
             padding: 24px;
+            border-right: 2px solid #e0e0e0;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+            max-width: 33%;
+        }
+
+        .preview-section {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+            background: #f9f9f9;
+            max-width: 66%;
         }
 
         .articles-container {
@@ -209,23 +229,6 @@
             flex: 1;
         }
 
-        .submit-section {
-            padding: 24px;
-            background: #f9f9f9;
-            border-top: 2px solid #e0e0e0;
-            text-align: center;
-        }
-
-        .output-section {
-            padding: 24px;
-            border-top: 2px solid #e0e0e0;
-            display: none;
-        }
-
-        .output-section.visible {
-            display: block;
-        }
-
         .preview-container {
             margin-bottom: 24px;
         }
@@ -233,13 +236,21 @@
         .preview-container h3 {
             margin-bottom: 12px;
             color: #0c2a4a;
+            font-size: 20px;
         }
 
         .preview-frame {
             width: 100%;
-            height: 600px;
+            height: calc(100vh - 300px);
+            min-height: 600px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            background: white;
+        }
+
+        .output-section {
+            padding: 24px;
+            border-top: 2px solid #e0e0e0;
             background: white;
         }
 
@@ -318,6 +329,25 @@
                 padding: 10px;
             }
 
+            .main-content-wrapper {
+                flex-direction: column;
+            }
+
+            .form-section {
+                border-right: none;
+                border-bottom: 2px solid #e0e0e0;
+                max-height: none;
+            }
+
+            .preview-section {
+                max-height: none;
+            }
+
+            .preview-frame {
+                height: 600px;
+                min-height: 400px;
+            }
+
             .article-header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -332,28 +362,26 @@
             <h1>Webform Builder</h1>
         </div>
 
-        <div class="form-section">
-            <div class="articles-container" id="articlesContainer">
-                <!-- Articles will be dynamically added here -->
+        <div class="main-content-wrapper">
+            <div class="form-section">
+                <div class="articles-container" id="articlesContainer">
+                    <!-- Articles will be dynamically added here -->
+                </div>
+
+                <button type="button" class="add-article-btn" onclick="addArticle()">
+                    + Add Article
+                </button>
             </div>
 
-            <button type="button" class="add-article-btn" onclick="addArticle()">
-                + Add Article
-            </button>
-        </div>
-
-        <div class="submit-section">
-            <button type="button" class="btn btn-primary" onclick="generateOutput()">
-                Generate Output
-            </button>
+            <div class="preview-section">
+                <div class="preview-container">
+                    <h3>Live Preview</h3>
+                    <iframe id="previewFrame" class="preview-frame"></iframe>
+                </div>
+            </div>
         </div>
 
         <div class="output-section" id="outputSection">
-            <div class="preview-container">
-                <h3>Preview</h3>
-                <iframe id="previewFrame" class="preview-frame"></iframe>
-            </div>
-
             <div class="code-container">
                 <div class="code-header">
                     <h3>Generated HTML</h3>
@@ -374,6 +402,7 @@
         let templateContent = '';
         let draggedElement = null;
         let quillEditors = {}; // Store Quill editor instances
+        let updateTimeout = null; // Debounce timer for real-time updates
 
                                                                                                                                 // Initialize template content (embedded to avoid CORS issues with file://)
         function initializeTemplate() {
@@ -388,6 +417,10 @@
                 initializeTemplate();
                 addArticle();
                 setupDragDrop();
+                // Show initial preview after a short delay
+                setTimeout(function() {
+                    updateOutputRealTime();
+                }, 500);
             } catch (error) {
                 console.error('Initialization error:', error);
                 alert('Error initializing form. Please check the console for details.');
@@ -415,6 +448,7 @@
                 // Initialize Quill after a short delay to ensure DOM is ready
                 setTimeout(function() {
                     initQuill(articleId);
+                    updateOutputRealTime(); // Real-time update after adding article
                 }, 100);
                 
                 setupDragDrop();
@@ -444,18 +478,22 @@
             articles.forEach((art, idx) => {
                 initQuill(art.id);
             });
+            
+            updateOutputRealTime(); // Real-time update after removing article
         }
 
         function addGalleryImage(articleIndex) {
             articles[articleIndex].galleryUrls.push('');
             renderArticles();
             initQuill(articles[articleIndex].id);
+            updateOutputRealTime(); // Real-time update
         }
 
         function removeGalleryImage(articleIndex, imageIndex) {
             articles[articleIndex].galleryUrls.splice(imageIndex, 1);
             renderArticles();
             initQuill(articles[articleIndex].id);
+            updateOutputRealTime(); // Real-time update
         }
 
         function renderArticles() {
@@ -524,10 +562,12 @@
         function updateArticle(index, field, value) {
             articles[index][field] = value;
             validateForm();
+            updateOutputRealTime(); // Real-time update
         }
 
         function updateGalleryImage(articleIndex, imageIndex, value) {
             articles[articleIndex].galleryUrls[imageIndex] = value;
+            updateOutputRealTime(); // Real-time update
         }
 
         function validateImageAlt(index) {
@@ -640,6 +680,7 @@
                     if (index !== -1) {
                         articles[index].body = quill.root.innerHTML;
                         validateForm();
+                        updateOutputRealTime(); // Real-time update
                     }
                 });
                 
@@ -711,6 +752,15 @@
 
             if (!templateContent) {
                 alert('Template not loaded yet. Please wait a moment and try again.');
+                return;
+            }
+
+            generateOutputCore(true);
+        }
+
+        // Core generation function that can run with or without validation
+        function generateOutputCore(showScroll) {
+            if (!templateContent) {
                 return;
             }
 
@@ -956,10 +1006,24 @@
             document.getElementById('codeOutput').textContent = output;
             const previewFrame = document.getElementById('previewFrame');
             previewFrame.srcdoc = output;
-            document.getElementById('outputSection').classList.add('visible');
             
-            // Scroll to output
-            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+            // Only scroll if manually triggered
+            if (showScroll) {
+                document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Debounced real-time update function
+        function updateOutputRealTime() {
+            // Clear any pending update
+            if (updateTimeout) {
+                clearTimeout(updateTimeout);
+            }
+            
+            // Debounce: wait 300ms after last change before updating
+            updateTimeout = setTimeout(function() {
+                generateOutputCore(false); // false = don't scroll
+            }, 300);
         }
 
         function copyToClipboard() {
@@ -1039,6 +1103,8 @@
                 articles.forEach(article => {
                     initQuill(article.id);
                 });
+                
+                updateOutputRealTime(); // Real-time update after reorder
             }
 
             return false;
