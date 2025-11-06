@@ -4,396 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webform Builder</title>
-    <!-- Test Commit -->
-    <!-- Quill.js - Free rich text editor, no API key required -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background: #0c2a4a;
-            color: white;
-            padding: 24px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .main-content-wrapper {
-            display: flex;
-            flex-direction: row;
-            min-height: calc(100vh - 200px);
-        }
-
-        .form-section {
-            flex: 1;
-            padding: 24px;
-            border-right: 2px solid #e0e0e0;
-            overflow-y: auto;
-            max-height: calc(100vh - 200px);
-            max-width: 33%;
-        }
-
-        .preview-section {
-            flex: 1;
-            padding: 24px;
-            overflow-y: auto;
-            max-height: calc(100vh - 200px);
-            background: #f9f9f9;
-            max-width: 66%;
-        }
-
-        .date-picker-section {
-            margin-bottom: 24px;
-            padding-bottom: 24px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-
-        .date-picker-section input[type="date"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            font-family: inherit;
-        }
-
-        .date-picker-section input[type="date"]:focus {
-            outline: none;
-            border-color: #0c2a4a;
-        }
-
-        .articles-container {
-            margin-bottom: 24px;
-        }
-
-        .article-group {
-            background: #f9f9f9;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 0;
-            margin-bottom: 20px;
-            position: relative;
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-
-        .article-group.dragging {
-            opacity: 0.5;
-            border-color: #0c2a4a;
-        }
-
-        .article-group:hover {
-            border-color: #0c2a4a;
-        }
-
-        .article-group.collapsed .article-content {
-            display: none;
-        }
-
-        .article-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 2px solid #e0e0e0;
-            cursor: pointer;
-            user-select: none;
-            background: white;
-            transition: background-color 0.2s ease;
-        }
-        .date-picker-section .form-group {
-            margin-bottom: 0;
-        }
-        .article-header:hover {
-            background: #f5f5f5;
-        }
-
-        .article-header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-        }
-
-        .article-toggle {
-            font-size: 18px;
-            color: #0c2a4a;
-            transition: transform 0.3s ease;
-            font-weight: bold;
-            min-width: 20px;
-            text-align: center;
-        }
-
-        .article-group.collapsed .article-toggle {
-            transform: rotate(-90deg);
-        }
-
-        .article-content {
-            padding: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .article-number {
-            font-weight: 700;
-            color: #0c2a4a;
-            font-size: 18px;
-        }
-
-        .article-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .drag-handle {
-            cursor: move;
-            padding: 4px;
-            color: #666;
-            font-size: 18px;
-            user-select: none;
-        }
-
-        .drag-handle:hover {
-            color: #0c2a4a;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary {
-            background: #0c2a4a;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #0a1f3a;
-        }
-
-        .btn-danger {
-            background: #e5253a;
-            color: white;
-            height: 37px;
-        }
-
-        .btn-danger:hover {
-            background: #c41e2f;
-        }
-
-        .btn-secondary {
-            background: #666;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #555;
-        }
-
-        .btn-small {
-            padding: 4px 8px;
-            font-size: 12px;
-        }
-
-        .form-group {
-            margin-bottom: 10px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 2px;
-            font-weight: 600;
-            color: #333;
-            font-size: 14px;
-        }
-
-        .form-group label.required::after {
-            content: " *";
-            color: #e5253a;
-        }
-        .gallery-item input[type="text"],
-        .form-group input[type="text"],
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            font-family: inherit;
-        }
-
-        .form-group input[type="text"]:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #0c2a4a;
-        }
-
-        .form-group .error {
-            color: #e5253a;
-            font-size: 12px;
-            margin-top: 4px;
-            display: none;
-        }
-
-        .form-group.has-error .error {
-            display: block;
-        }
-
-        .form-group.has-error input,
-        .form-group.has-error textarea {
-            border-color: #e5253a;
-        }
-
-        .gallery-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .gallery-item {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            align-items: center;
-        }
-
-        .gallery-item input {
-            flex: 1;
-        }
-
-        .preview-container {
-            margin-bottom: 24px;
-        }
-
-        .preview-container h3 {
-            margin-bottom: 12px;
-            color: #0c2a4a;
-            font-size: 20px;
-        }
-
-        .preview-frame {
-            width: 100%;
-            height: calc(100vh - 300px);
-            min-height: 600px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background: white;
-        }
-
-        .quill-editor {
-            min-height: 150px;
-            background: white;
-        }
-
-        /* Hidden element to store generated HTML for copying */
-        #codeOutput {
-            display: none;
-        }
-
-        .add-article-btn {
-            padding: 16px;
-            background: #0c2a4a;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            flex: 1;
-        }
-
-        .add-article-btn:hover {
-            background: #0a1f3a;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .copy-btn {
-            background: #0c2a4a;
-            color: white;
-            border: none;
-            padding: 16px 24px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            flex: 1;
-        }
-
-        .copy-btn:hover {
-            background: #0a1f3a;
-        }
-
-        .copy-btn.copied {
-            background: #28a745;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .main-content-wrapper {
-                flex-direction: column;
-            }
-
-            .form-section {
-                border-right: none;
-                border-bottom: 2px solid #e0e0e0;
-                max-height: none;
-            }
-
-            .preview-section {
-                max-height: none;
-            }
-
-            .preview-frame {
-                height: 600px;
-                min-height: 400px;
-            }
-
-            .article-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-        }
-    </style>
+    <link href="includes/css/styles.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -407,6 +19,26 @@
                     <div class="form-group">
                         <label class="required">Publication Date</label>
                         <input type="date" id="publicationDate" onchange="updatePublicationDate(this.value)" />
+                    </div>
+                </div>
+
+                <div class="employee-spotlight-section" style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 2px solid #e0e0e0;">
+                    <h3 style="margin-bottom: 16px; color: #0c2a4a; font-size: 18px;">Employee Spotlight</h3>
+                    <div class="form-group">
+                        <label class="required">Name</label>
+                        <input type="text" id="employeeSpotlightName" value="Daniel Tomlinson" oninput="updateEmployeeSpotlight('name', this.value)" placeholder="Enter employee name" />
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Title</label>
+                        <input type="text" id="employeeSpotlightTitle" value="Digital Marketing Specialist" oninput="updateEmployeeSpotlight('title', this.value)" placeholder="Enter employee title" />
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Image URL</label>
+                        <input type="text" id="employeeSpotlightImageUrl" value="https://www.bloodcenter.org/webres/Image/FGN/10242025/RoseSzczurek.jpg" oninput="updateEmployeeSpotlight('imageUrl', this.value)" placeholder="Enter image URL" />
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Content</label>
+                        <div id="employeeSpotlightContent" class="quill-editor"></div>
                     </div>
                 </div>
 
@@ -426,13 +58,13 @@
 
             <div class="preview-section">
                 <div class="preview-container">
-                    <h3>Live Preview</h3>
                     <iframe id="previewFrame" class="preview-frame"></iframe>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
         let articles = [];
         let articleCounter = 0;
@@ -441,11 +73,18 @@
         let quillEditors = {}; // Store Quill editor instances
         let updateTimeout = null; // Debounce timer for real-time updates
         let publicationDate = ''; // Store the selected publication date
+        let employeeSpotlight = {
+            name: 'Daniel Tomlinson',
+            title: 'Digital Marketing Specialist',
+            imageUrl: 'https://www.bloodcenter.org/webres/Image/FGN/10242025/RoseSzczurek.jpg',
+            content: ''
+        };
+        let employeeSpotlightQuill = null; // Store Quill editor for employee spotlight content
 
                                                                                                                                 // Initialize template content (embedded to avoid CORS issues with file://)
         function initializeTemplate() {
             // Template content from output.html - embedded directly to avoid CORS issues
-            const templateString = "<meta charset=\"utf-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n<title></title>\n<meta name=\"description\" content=\"Stay updated with the latest feel-good news from ImpactLife. Read inspiring stories about blood donation, community impact, and life-saving moments.\" /><meta property=\"og:title\" content=\"Feel-Good News - ImpactLife\" /><meta property=\"og:description\" content=\"Stay updated with the latest feel-good news from ImpactLife. Read inspiring stories about blood donation, community impact, and life-saving moments.\" /><meta property=\"og:site_name\" content=\"ImpactLife\" /><meta property=\"og:type\" content=\"article\" /><meta name=\"twitter:card\" content=\"summary_large_image\" /><meta name=\"twitter:title\" content=\"Feel-Good News - ImpactLife\" /><meta name=\"twitter:description\" content=\"Stay updated with the latest feel-good news from ImpactLife. Read inspiring stories about blood donation, community impact, and life-saving moments.\" />\n<style type=\"text/css\">/* Enhanced Feel-Good News Layout */\n    :root{\n      --navy:#0c2a4a;\n      --red:#e5253a;\n      --yellow:#f4b000;\n      --gray-100:#f6f7f9;\n      --radius:18px;\n      --gap:24px;\n    }\n    *{box-sizing:border-box}\n    body{background:var(--gray-100);}\n\n    .wrapper{max-width:1120px;margin-inline:auto;padding:28px 18px 56px;}\n\n    /* Hero Section */\n    header.hero{\n      background:var(--navy);\n      color:#fff;\n      border-radius:var(--radius);\n      padding:36px 24px 24px;\n      position:relative;\n      overflow:hidden;\n    }\n    .brand-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}\n    .brand img{height:28px;width:auto}\n    .hero h1{margin:8px 0 10px; font-family: 'Roboto Condensed', Helvetica, sans-serif; font-weight:700; text-transform:uppercase; font-size:5rem;}\n    h1:before{display:none;}\n    .date-badge{\n      position:absolute;right:18px;top:18px;\n      background:var(--red);color:#fff;\n      padding:10px 14px;border-radius:999px;\n      font-weight:700;font-size:14px\n    }\n    .stripe{position:absolute;left:0;bottom:0;width:100%;height:10px;background:var(--yellow);}\n\n    /* Main Content Grid - Masonry Style */\n    .main-grid{column-count:2;column-gap:var(--gap);margin-top:var(--gap);}\n    .main-content{column-break-inside:avoid;break-inside:avoid;}\n    .sidebar{grid-column:2;}\n    \n    /* Masonry Flow Classes */\n    .masonry-item{break-inside:avoid;margin-bottom:var(--gap);display:inline-block;width:100%;}\n    .masonry-item:last-child{margin-bottom:0;}\n    \n    /* Article Cards */\n    .card{\n      background:#fff;border-radius:var(--radius);\n      padding:22px 20px;box-shadow:0 2px 10px rgba(12,42,74,.06);\n      margin-bottom:var(--gap);\n      transition: all 0.3s ease;\n      cursor: pointer;\n    }\n    .card:hover{\n      transform: translateY(-4px);\n      box-shadow:0 8px 25px rgba(12,42,74,.15);\n      background:var(--navy);\n      color:#fff;\n    }\n    .card h2{font-family: 'Roboto Condensed', Helvetica, sans-serif; font-weight:700; text-transform:uppercase; color:var(--navy); margin-bottom:12px;}\n    .card:hover h2{color:#fff;}\n    .card blockquote{font-family: 'Roboto Condensed', Helvetica, sans-serif; font-weight:700; font-style:italic; color:var(--red); border-left:4px solid var(--red); padding-left:16px; margin:16px 0;}\n    .card:hover blockquote{color:#fff; border-left-color:#fff;}\n    \n    /* Links */\n    a{color:var(--red); text-decoration:none;}\n    a:hover{text-decoration:underline;}\n    .card:hover a{color:#fff;}\n    \n    /* Button Styling */\n    .btn{font-size:inherit; padding:.625em 1.5em;}\n    \n    /* Media Grid */\n    .media{display:grid;gap:12px;grid-template-columns:1fr 1fr;margin-top:14px}\n    .media img{width:100%;height:auto;border-radius:14px;display:block}\n    .media.single{grid-template-columns:1fr}\n    .masonry-image{width:100%; height:auto; display:block; max-width:500px; opacity:1; transition: opacity 1s ease-in-out;}\n    \n    /* Video Container */\n    .video-container{\n      position:relative;\n      width:100%;\n      height:0;\n      padding-bottom:56.25%; /* 16:9 aspect ratio */\n      overflow:hidden;\n      border-radius:14px;\n    }\n    .video-container iframe{\n      position:absolute;\n      top:0;\n      left:0;\n      width:100%;\n      height:100%;\n    }\n    \n    /* Sidebar */\n    .sidebar{display:none;}\n    \n    /* Bottom Spotlight Section */\n    .bottom-spotlight{\n      grid-column:1 / -1;\n      margin-top:var(--gap);\n      min-height:fit-content;\n    }\n    \n    /* Thank The Donor Section */\n    .thank-donor-section{\n      grid-column:1;\n      margin-top:var(--gap);\n      min-height:fit-content;\n      background:var(--yellow);\n      color:var(--navy);\n      transition: all 0.3s ease;\n      cursor: pointer;\n    }\n    .thank-donor-section:hover{\n      transform: translateY(-4px);\n      box-shadow:0 8px 25px rgba(244,176,0,.3);\n      background:#e6a600;\n    }\n    .thank-donor-section h2{\n      color:var(--navy);\n    }\n    \n    /* Callout Sections */\n    .callout{\n      background:var(--navy);color:#fff;border-radius:var(--radius);\n      padding:22px 20px;\n      transition: all 0.3s ease;\n      cursor: pointer;\n    }\n    .callout:hover{\n      transform: translateY(-4px);\n      box-shadow:0 8px 25px rgba(12,42,74,.3);\n      background:#0a1f3a;\n    }\n    .callout h2{color:#fff; font-family: 'Roboto Condensed', Helvetica, sans-serif; font-weight:700; text-transform:uppercase;}\n    .spotlight-grid{display:grid;gap:14px;grid-template-columns:1fr 1.15fr;align-items:start;}\n    .spotlight-photo{width:100%;height:auto;max-height:500px;border-radius:16px;display:block;object-fit:cover;}\n    .pill{display:inline-block;background:var(--red);color:#fff;font-weight:800;\n      padding:6px 12px;border-radius:999px;margin-bottom:10px;}\n\n    /* Special Sections */\n    .highlight-box{\n      background:linear-gradient(135deg, var(--red) 0%, #BB2031 100%);\n      color:#fff;\n      border-radius:var(--radius);\n      padding:20px;\n      margin:var(--gap) 0;\n    }\n    .highlight-box h3{color:#fff; margin-bottom:12px; font-family: 'Roboto Condensed', Helvetica, sans-serif; font-weight:700; text-transform:uppercase;}\n    \n    /* Footer */\n    footer{margin-top:var(--gap);background:#001a33;color:#dbe6f2;border-radius:var(--radius);}\n    footer .inner{padding:16px 20px;text-align:center;font-size:14px}\n\n    /* Responsive Design */\n    @media (max-width:980px){\n      .main-grid{column-count:1;}\n      .main-content{grid-column:1; order:1; display:contents;}\n      .sidebar{grid-column:1; order:2; display:contents;}\n      .thank-donor-section{grid-column:1; order:3;}\n      .bottom-spotlight{grid-column:1; order:4;}\n      .spotlight-grid{grid-template-columns:1fr}\n      .media{grid-template-columns:1fr}\n      .date-badge{position:static;display:inline-block;margin-top:8px}\n    }\n    \n    @media (max-width:768px){\n      .wrapper{padding:18px 12px 36px;}\n      .hero{padding:24px 18px 18px;}\n      .card{padding:18px 16px;}\n      .callout{padding:18px 16px;}\n    }\n</style>\n<div class=\"wrapper\"><!-- HERO -->\n<header aria-labelledby=\"title\" class=\"hero\">\n<div class=\"date-badge\">$FORMVALUE_PUBLICATION_DATE</div>\n\n<h1 id=\"title\" style=\"color:white;\">FEEL-GOOD NEWS</h1>\n\n<div class=\"stripe\"></div>\n</header>\n\n\n<!-- Main Content - Masonry Layout -->\n<div class=\"main-grid\">\n  <div class=\"main-content\">\n  \n    <!-- Left Column -->\n\n    <!-- Story 1 -->\n    <article class=\"card masonry-item\" style=\"order: 1;\">\n      <h2>$FORMVALUE_TITLE_01</h2>\n      <p>$FORMVALUE_BODY_CONTENT_01</p>\n      <div class=\"media single\">\n        <img class=\"masonry-image\" alt=\"$FORMVALUE_IMAGE_ALT_01\" id=\"$FORMVALUE_IMAGE_ID_01\" src=\"$FORMVALUE_IMAGE_URL_01\" />\n      </div>\n    </article>\n\n    <!-- Story 3 -->\n    <article class=\"card masonry-item\" style=\"order: 3;\">\n      <h2>$FORMVALUE_TITLE_03</h2>\n      <p>$FORMVALUE_BODY_CONTENT_03</p>\n      <div class=\"media single\">\n        <img class=\"masonry-image\" alt=\"$FORMVALUE_IMAGE_ALT_03\" id=\"$FORMVALUE_IMAGE_ID_03\" src=\"$FORMVALUE_IMAGE_URL_03\" />\n      </div>\n    </article>\n  </div>\n\n\n  <!-- Right Column -->\n\n  <div class=\"sidebar\">\n  \n    <!-- Story 2 -->\n    <article class=\"card masonry-item\" style=\"order: 2;\">\n      <h2>$FORMVALUE_TITLE_02</h2>\n      <p>$FORMVALUE_BODY_CONTENT_02</p>\n      <div class=\"media single\">\n        <img class=\"masonry-image\" alt=\"$FORMVALUE_IMAGE_ALT_02\" id=\"$FORMVALUE_IMAGE_ID_02\" src=\"$FORMVALUE_IMAGE_URL_02\" />\n      </div>\n    </article>\n\n    <!-- Story 4 -->\n    <article class=\"card masonry-item\" style=\"order: 4;\">\n      <h2>$FORMVALUE_TITLE_04</h2>\n      <p>$FORMVALUE_BODY_CONTENT_04</p>\n      <div class=\"media single\">\n        <img class=\"masonry-image\" alt=\"$FORMVALUE_IMAGE_ALT_04\" id=\"$FORMVALUE_IMAGE_ID_04\" src=\"$FORMVALUE_IMAGE_URL_04\" />\n        <div class=\"video-container\">\n          <iframe allowfullscreen=\"\" frameborder=\"0\" mozallowfullscreen=\"\" src=\"$FORMVALUE_VIDEO_URL_04\" webkitallowfullscreen=\"\"></iframe>\n        </div>\n      </div>\n    </article>\n\n  </div>\n\n</div>\n<!-- Employee Spotlight -->\n\n<section class=\"callout bottom-spotlight\" style=\"order: 5;\"><span class=\"pill\">EMPLOYEE SPOTLIGHT</span>\n\n<h2 style=\"text-align: center;\">Rose Szczurek</h2>\n\n<div class=\"spotlight-grid\">\n<div><img alt=\"Rose Szczurek, Reference Lab Technologist\" class=\"spotlight-photo\" src=\"/webres/Image/FGN/10242025/RoseSzczurek.jpg\" /></div>\n\n<div>\n<p><strong>Reference Lab Technologist</strong><br />\nalmost 13 years with the company<br />\nBlood Type: O+</p>\n\n<p><strong>What runs through your veins?</strong> Caffeine. A lot of caffeine.</p>\n\n<p><strong>What's your favorite thing about being part of our team?</strong> Knowing we are giving someone more time with their loved ones and friends (nothing pulls at my heart strings more than obstetrics cases).</p>\n\n<p><strong>When you're not at work, you can be found ___________.</strong> Running... A Lot. And eating (I constantly snack)- I'm a sucker for a good sour gummy candy or anything Haribo. But I also enjoy anything active and outdoor.</p>\n</div>\n</div>\n</section>\n</div>\n<!-- Footer -->\n\n<footer>\n<div class=\"inner\">\n<p>Feel-Good News is published every Friday to inspire + connect our ImpactLife team.</p>\n</div>\n</footer>\n</div>\n<script>\n  (function () {\n    // Form Gallery\n    const formImages = [\n      \"$FORMVALUE_IMAGE_GALLERY_URL_01\",\n      \"$FORMVALUE_IMAGE_GALLERY_URL_02\",\n      \"$FORMVALUE_IMAGE_GALLERY_URL_03\",\n      \"$FORMVALUE_IMAGE_GALLERY_URL_04\",\n      \"$FORMVALUE_IMAGE_GALLERY_URL_05\"\n    ];\n    let formIndex = 0;\n    const adamImg = document.getElementById(\"$FORMVALUE_IMAGE_GALLERY_ID_01\");\n    \n    if (formImg) {\n      setInterval(function () {\n        // fade out\n        formImg.style.opacity = 0;\n        \n        setTimeout(() => {\n          // change image once faded\n          formIndex = (formIndex + 1) % formImages.length;\n          formImg.src = formImages[formIndex];\n          // fade in\n          formImg.style.opacity = 1;\n        }, 1000); // matches transition duration\n      }, 5000); // switch every 5 seconds\n    }\n  })();\n" + '</' + 'script>' + "<script>\n  // Hide on-page banner and footer\n  document.addEventListener('DOMContentLoaded', function() {\n    // Hide any on-page banner divs\n    const banners = document.querySelectorAll('div[class*=\"banner\"], div[id*=\"banner\"], .banner, #banner');\n    banners.forEach(banner => {\n      if (banner) {\n        banner.style.display = 'none';\n      }\n    });\n    \n    // Hide footer with specific selector\n    const footer = document.querySelector('#aspnetForm > div.site_wrapper > footer');\n    if (footer) {\n      footer.style.display = 'none';\n    }\n    \n    // Also hide any other footer elements as backup\n    const allFooters = document.querySelectorAll('footer');\n    allFooters.forEach(footer => {\n      if (footer && !footer.classList.contains('inner')) {\n        footer.style.display = 'none';\n      }\n    });\n    \n    // Set specific element width to 100%\n    const targetElement = document.querySelector('#main > div.content.clearfix > div > div > div.group_2of3.first');\n    if (targetElement) {\n      targetElement.style.width = '100%';\n    }\n    \n    // Hide and remove sizing from specific elements\n    const firstChild = document.querySelector('#main > div.content.clearfix > div > div > div:nth-child(1)');\n    if (firstChild) {\n      firstChild.style.display = 'none';\n      firstChild.style.width = '0';\n      firstChild.style.height = '0';\n      firstChild.style.margin = '0';\n      firstChild.style.padding = '0';\n    }\n    \n    // Hide navigation\n    const nav = document.querySelector('#main > nav');\n    if (nav) {\n      nav.style.display = 'none';\n    }\n  }); \n" + '</' + 'script>' + "<script>\n(function () {\n  var NEW_NAME = \"ImpactLife\";\n  var OLD_NAME = \"MVRBC\";\n\n  // --- 1) Update JSON-LD (application/ld+json) ---\n  function mutateNames(obj) {\n    if (!obj || typeof obj !== \"object\") return;\n    if (Array.isArray(obj)) {\n      obj.forEach(mutateNames);\n      return;\n    }\n    // Replace exact \"MVRBC\" in common places (and anywhere 'name' equals it)\n    if (typeof obj.name === \"string\" && obj.name.trim() === OLD_NAME) {\n      obj.name = NEW_NAME;\n    }\n    if (obj.author && typeof obj.author === \"object\") {\n      if (typeof obj.author.name === \"string\" && obj.author.name.trim() === OLD_NAME) {\n        obj.author.name = NEW_NAME;\n      }\n    }\n    if (obj.publisher && typeof obj.publisher === \"object\") {\n      if (typeof obj.publisher.name === \"string\" && obj.publisher.name.trim() === OLD_NAME) {\n        obj.publisher.name = NEW_NAME;\n      }\n    }\n    // Recurse through all properties\n    Object.keys(obj).forEach(function (k) {\n      if (obj[k] && typeof obj[k] === \"object\") mutateNames(obj[k]);\n    });\n  }\n\n  Array.prototype.forEach.call(\n    document.querySelectorAll('script[type=\"application/ld+json\"]'),\n    function (node) {\n      try {\n        // Some sites embed minified JSON; keep formatting minimal on write-back\n        var data = JSON.parse(node.textContent.trim());\n        mutateNames(data);\n        node.textContent = JSON.stringify(data);\n      } catch (e) {\n        // Ignore scripts that aren't valid JSON\n      }\n    }\n  );\n\n  // --- 2) (Optional) Replace visible text \"MVRBC\" with \"ImpactLife\" ---\n  // Comment out this block if you only want the JSON-LD change.\n  (function replaceVisibleText() {\n    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {\n      acceptNode: function (n) {\n        // Skip empty/whitespace text nodes\n        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;\n        // Skip text under these elements\n        var p = n.parentNode;\n        while (p) {\n          var tag = (p.tagName || \"\").toLowerCase();\n          if (tag === \"script\" || tag === \"style\" || tag === \"noscript\" || tag === \"textarea\") {\n            return NodeFilter.FILTER_REJECT;\n          }\n          p = p.parentNode;\n        }\n        return NodeFilter.FILTER_ACCEPT;\n      }\n    });\n\n    var re = new RegExp(\"\\\\b\" + OLD_NAME.replace(/[.*+?^${}()|[\\]\\\\]/g, \"\\\\$&\") + \"\\\\b\", \"g\");\n    var node;\n    while ((node = walker.nextNode())) {\n      if (re.test(node.nodeValue)) {\n        node.nodeValue = node.nodeValue.replace(re, NEW_NAME);\n      }\n    }\n   })();\n })();\n " + '</' + 'script>' + "<script>\n // Override schema.org data for social media previews\n (function() {\n   // Update any existing JSON-LD schema\n   const jsonLdScripts = document.querySelectorAll('script[type=\"application/ld+json\"]');\n   jsonLdScripts.forEach(script => {\n     try {\n       const data = JSON.parse(script.textContent);\n       if (data.publisher && data.publisher.name === 'MVRBC') {\n         data.publisher.name = 'ImpactLife';\n       }\n       if (data.author && data.author.name === 'MVRBC') {\n         data.author.name = 'ImpactLife';\n       }\n       if (data.name && data.name.includes('MVRBC')) {\n         data.name = data.name.replace(/MVRBC/g, 'ImpactLife');\n       }\n       script.textContent = JSON.stringify(data);\n     } catch (e) {\n       // Ignore invalid JSON\n     }\n   });\n   \n   // Add new schema to override any global schema\n   const newSchema = {\n     \"@context\": \"https://schema.org\",\n     \"@type\": \"Article\",\n     \"headline\": \"Feel-Good News - ImpactLife\",\n     \"description\": \"Stay updated with the latest feel-good news from ImpactLife. Read inspiring stories about blood donation, community impact, and life-saving moments.\",\n     \"publisher\": {\n       \"@type\": \"Organization\",\n       \"name\": \"ImpactLife\",\n       \"url\": \"https://www.bloodcenter.org\"\n     },\n     \"author\": {\n       \"@type\": \"Organization\", \n       \"name\": \"ImpactLife\"\n     },\n     \"datePublished\": \"2025-10-24\",\n     \"dateModified\": \"2025-10-24\"\n   };\n   \n   const schemaScript = document.createElement('script');\n   schemaScript.type = 'application/ld+json';\n   schemaScript.textContent = JSON.stringify(newSchema);\n   document.head.appendChild(schemaScript);\n })();\n " + '</' + 'script>' + "";
+            const templateString = "<meta charset=\"utf-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n<title></title>\n<meta name=\"description\" content=\"Stay updated with the latest feel-good news from ImpactLife. Read inspiring stories about blood donation, community impact, and life-saving moments.\" /><meta property=\"og:title\" content=\"Feel-Good News - ImpactLife\" /><meta property=\"og:description\" content=\"Stay updated with the latest feel-good news from ImpactLife. Read inspiring stories about blood donation, community impact, and life-saving moments.\" /><meta property=\"og:site_name\" content=\"ImpactLife\" /><meta property=\"og:type\" content=\"article\" /><meta name=\"twitter:card\" content=\"summary_large_image\" /><meta name=\"twitter:title\" content=\"Feel-Good News - ImpactLife\" /><meta name=\"twitter:description\" content=\"Stay updated with the latest feel-good news from ImpactLife. Read inspiring stories about blood donation, community impact, and life-saving moments.\" />\n<style type=\"text/css\">/* Enhanced Feel-Good News Layout */\n    :root{\n      --navy:#0c2a4a;\n      --red:#e5253a;\n      --yellow:#f4b000;\n      --gray-100:#f6f7f9;\n      --radius:18px;\n      --gap:24px;\n    }\n    *{box-sizing:border-box}\n    body{background:var(--gray-100);}\n\n    .wrapper{max-width:1120px;margin-inline:auto;padding:28px 18px 56px;}\n\n    /* Hero Section */\n    header.hero{\n      background:var(--navy);\n      color:#fff;\n      border-radius:var(--radius);\n      padding:36px 24px 24px;\n      position:relative;\n      overflow:hidden;\n    }\n    .brand-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}\n    .brand img{height:28px;width:auto}\n    .hero h1{margin:8px 0 10px; font-family: 'Roboto Condensed', Helvetica, sans-serif; font-weight:700; text-transform:uppercase; font-size:5rem;}\n    h1:before{display:none;}\n    .date-badge{\n      position:absolute;right:18px;top:18px;\n      background:var(--red);color:#fff;\n      padding:10px 14px;border-radius:999px;\n      font-weight:700;font-size:14px\n    }\n    .stripe{position:absolute;left:0;bottom:0;width:100%;height:10px;background:var(--yellow);}\n\n    /* Main Content Grid - Masonry Style */\n    .main-grid{column-count:2;column-gap:var(--gap);margin-top:var(--gap);}\n    .main-content{column-break-inside:avoid;break-inside:avoid;}\n    .sidebar{grid-column:2;}\n    \n    /* Masonry Flow Classes */\n    .masonry-item{break-inside:avoid;margin-bottom:var(--gap);display:inline-block;width:100%;}\n    .masonry-item:last-child{margin-bottom:0;}\n    \n    /* Article Cards */\n    .card{\n      background:#fff;border-radius:var(--radius);\n      padding:22px 20px;box-shadow:0 2px 10px rgba(12,42,74,.06);\n      margin-bottom:var(--gap);\n      transition: all 0.3s ease;\n      cursor: pointer;\n    }\n    .card:hover{\n      transform: translateY(-4px);\n      box-shadow:0 8px 25px rgba(12,42,74,.15);\n      background:var(--navy);\n      color:#fff;\n    }\n    .card h2{font-family: 'Roboto Condensed', Helvetica, sans-serif; font-weight:700; text-transform:uppercase; color:var(--navy); margin-bottom:12px;}\n    .card:hover h2{color:#fff;}\n    .card blockquote{font-family: 'Roboto Condensed', Helvetica, sans-serif; font-weight:700; font-style:italic; color:var(--red); border-left:4px solid var(--red); padding-left:16px; margin:16px 0;}\n    .card:hover blockquote{color:#fff; border-left-color:#fff;}\n    \n    /* Links */\n    a{color:var(--red); text-decoration:none;}\n    a:hover{text-decoration:underline;}\n    .card:hover a{color:#fff;}\n    \n    /* Button Styling */\n    .btn{font-size:inherit; padding:.625em 1.5em;}\n    \n    /* Media Grid */\n    .media{display:grid;gap:12px;grid-template-columns:1fr 1fr;margin-top:14px}\n    .media img{width:100%;height:auto;border-radius:14px;display:block}\n    .media.single{grid-template-columns:1fr}\n    .masonry-image{width:100%; height:auto; display:block; max-width:500px; opacity:1; transition: opacity 1s ease-in-out;}\n    \n    /* Video Container */\n    .video-container{\n      position:relative;\n      width:100%;\n      height:0;\n      padding-bottom:56.25%; /* 16:9 aspect ratio */\n      overflow:hidden;\n      border-radius:14px;\n    }\n    .video-container iframe{\n      position:absolute;\n      top:0;\n      left:0;\n      width:100%;\n      height:100%;\n    }\n    \n    /* Sidebar */\n    .sidebar{display:none;}\n    \n    /* Bottom Spotlight Section */\n    .bottom-spotlight{\n      grid-column:1 / -1;\n      margin-top:var(--gap);\n      min-height:fit-content;\n    }\n    \n    /* Thank The Donor Section */\n    .thank-donor-section{\n      grid-column:1;\n      margin-top:var(--gap);\n      min-height:fit-content;\n      background:var(--yellow);\n      color:var(--navy);\n      transition: all 0.3s ease;\n      cursor: pointer;\n    }\n    .thank-donor-section:hover{\n      transform: translateY(-4px);\n      box-shadow:0 8px 25px rgba(244,176,0,.3);\n      background:#e6a600;\n    }\n    .thank-donor-section h2{\n      color:var(--navy);\n    }\n    \n    /* Callout Sections */\n    .callout{\n      background:var(--navy);color:#fff;border-radius:var(--radius);\n      padding:22px 20px;\n      transition: all 0.3s ease;\n      cursor: pointer;\n    }\n    .callout:hover{\n      transform: translateY(-4px);\n      box-shadow:0 8px 25px rgba(12,42,74,.3);\n      background:#0a1f3a;\n    }\n    .callout h2{color:#fff; font-family: 'Roboto Condensed', Helvetica, sans-serif; font-weight:700; text-transform:uppercase;}\n    .spotlight-grid{display:grid;gap:14px;grid-template-columns:1fr 1.15fr;align-items:start;}\n    .spotlight-photo{width:100%;height:auto;max-height:500px;border-radius:16px;display:block;object-fit:cover;}\n    .pill{display:inline-block;background:var(--red);color:#fff;font-weight:800;\n      padding:6px 12px;border-radius:999px;margin-bottom:10px;}\n\n    /* Special Sections */\n    .highlight-box{\n      background:linear-gradient(135deg, var(--red) 0%, #BB2031 100%);\n      color:#fff;\n      border-radius:var(--radius);\n      padding:20px;\n      margin:var(--gap) 0;\n    }\n    .highlight-box h3{color:#fff; margin-bottom:12px; font-family: 'Roboto Condensed', Helvetica, sans-serif; font-weight:700; text-transform:uppercase;}\n    \n    /* Footer */\n    footer{margin-top:var(--gap);background:#001a33;color:#dbe6f2;border-radius:var(--radius);}\n    footer .inner{padding:16px 20px;text-align:center;font-size:14px}\n\n    /* Responsive Design */\n    @media (max-width:980px){\n      .main-grid{column-count:1;}\n      .main-content{grid-column:1; order:1; display:contents;}\n      .sidebar{grid-column:1; order:2; display:contents;}\n      .thank-donor-section{grid-column:1; order:3;}\n      .bottom-spotlight{grid-column:1; order:4;}\n      .spotlight-grid{grid-template-columns:1fr}\n      .media{grid-template-columns:1fr}\n      .date-badge{position:static;display:inline-block;margin-top:8px}\n    }\n    \n    @media (max-width:768px){\n      .wrapper{padding:18px 12px 36px;}\n      .hero{padding:24px 18px 18px;}\n      .card{padding:18px 16px;}\n      .callout{padding:18px 16px;}\n    }\n</style>\n<div class=\"wrapper\"><!-- HERO -->\n<header aria-labelledby=\"title\" class=\"hero\">\n<div class=\"date-badge\">$FORMVALUE_PUBLICATION_DATE</div>\n\n<h1 id=\"title\" style=\"color:white;\">FEEL-GOOD NEWS</h1>\n\n<div class=\"stripe\"></div>\n</header>\n\n\n<!-- Main Content - Masonry Layout -->\n<div class=\"main-grid\">\n  <div class=\"main-content\">\n  \n    <!-- Left Column -->\n\n    <!-- Story 1 -->\n    <article class=\"card masonry-item\" style=\"order: 1;\">\n      <h2>$FORMVALUE_TITLE_01</h2>\n      <p>$FORMVALUE_BODY_CONTENT_01</p>\n      <div class=\"media single\">\n        <img class=\"masonry-image\" alt=\"$FORMVALUE_IMAGE_ALT_01\" id=\"$FORMVALUE_IMAGE_ID_01\" src=\"$FORMVALUE_IMAGE_URL_01\" />\n      </div>\n    </article>\n\n    <!-- Story 3 -->\n    <article class=\"card masonry-item\" style=\"order: 3;\">\n      <h2>$FORMVALUE_TITLE_03</h2>\n      <p>$FORMVALUE_BODY_CONTENT_03</p>\n      <div class=\"media single\">\n        <img class=\"masonry-image\" alt=\"$FORMVALUE_IMAGE_ALT_03\" id=\"$FORMVALUE_IMAGE_ID_03\" src=\"$FORMVALUE_IMAGE_URL_03\" />\n      </div>\n    </article>\n  </div>\n\n\n  <!-- Right Column -->\n\n  <div class=\"sidebar\">\n  \n    <!-- Story 2 -->\n    <article class=\"card masonry-item\" style=\"order: 2;\">\n      <h2>$FORMVALUE_TITLE_02</h2>\n      <p>$FORMVALUE_BODY_CONTENT_02</p>\n      <div class=\"media single\">\n        <img class=\"masonry-image\" alt=\"$FORMVALUE_IMAGE_ALT_02\" id=\"$FORMVALUE_IMAGE_ID_02\" src=\"$FORMVALUE_IMAGE_URL_02\" />\n      </div>\n    </article>\n\n    <!-- Story 4 -->\n    <article class=\"card masonry-item\" style=\"order: 4;\">\n      <h2>$FORMVALUE_TITLE_04</h2>\n      <p>$FORMVALUE_BODY_CONTENT_04</p>\n      <div class=\"media single\">\n        <img class=\"masonry-image\" alt=\"$FORMVALUE_IMAGE_ALT_04\" id=\"$FORMVALUE_IMAGE_ID_04\" src=\"$FORMVALUE_IMAGE_URL_04\" />\n        <div class=\"video-container\">\n          <iframe allowfullscreen=\"\" frameborder=\"0\" mozallowfullscreen=\"\" src=\"$FORMVALUE_VIDEO_URL_04\" webkitallowfullscreen=\"\"></iframe>\n        </div>\n      </div>\n    </article>\n\n  </div>\n\n</div>\n<!-- Employee Spotlight -->\n\n<section class=\"callout bottom-spotlight\" style=\"order: 5;\"><span class=\"pill\">EMPLOYEE SPOTLIGHT</span>\n\n<h2 style=\"text-align: center;\">$EMPLOYEE_SPOTLIGHT_NAME</h2>\n\n<div class=\"spotlight-grid\">\n<div><img alt=\"$EMPLOYEE_SPOTLIGHT_NAME, $EMPLOYEE_SPOTLIGHT_TITLE\" class=\"spotlight-photo\" src=\"$EMPLOYEE_SPOTLIGHT_URL\" /></div>\n\n<div>\n<p>$EMPLOYEE_SPOTLIGHT_CONTENT</p>\n</div>\n</div>\n</section>\n</div>\n<!-- Footer -->\n\n<footer>\n<div class=\"inner\">\n<p>Feel-Good News is published every Friday to inspire + connect our ImpactLife team.</p>\n</div>\n</footer>\n</div>\n<script>\n  (function () {\n    // Form Gallery\n    const formImages = [\n      \"$FORMVALUE_IMAGE_GALLERY_URL_01\",\n      \"$FORMVALUE_IMAGE_GALLERY_URL_02\",\n      \"$FORMVALUE_IMAGE_GALLERY_URL_03\",\n      \"$FORMVALUE_IMAGE_GALLERY_URL_04\",\n      \"$FORMVALUE_IMAGE_GALLERY_URL_05\"\n    ];\n    let formIndex = 0;\n    const adamImg = document.getElementById(\"$FORMVALUE_IMAGE_GALLERY_ID_01\");\n    \n    if (formImg) {\n      setInterval(function () {\n        // fade out\n        formImg.style.opacity = 0;\n        \n        setTimeout(() => {\n          // change image once faded\n          formIndex = (formIndex + 1) % formImages.length;\n          formImg.src = formImages[formIndex];\n          // fade in\n          formImg.style.opacity = 1;\n        }, 1000); // matches transition duration\n      }, 5000); // switch every 5 seconds\n    }\n  })();\n" + '</' + 'script>' + "<script>\n  // Hide on-page banner and footer\n  document.addEventListener('DOMContentLoaded', function() {\n    // Hide any on-page banner divs\n    const banners = document.querySelectorAll('div[class*=\"banner\"], div[id*=\"banner\"], .banner, #banner');\n    banners.forEach(banner => {\n      if (banner) {\n        banner.style.display = 'none';\n      }\n    });\n    \n    // Hide footer with specific selector\n    const footer = document.querySelector('#aspnetForm > div.site_wrapper > footer');\n    if (footer) {\n      footer.style.display = 'none';\n    }\n    \n    // Also hide any other footer elements as backup\n    const allFooters = document.querySelectorAll('footer');\n    allFooters.forEach(footer => {\n      if (footer && !footer.classList.contains('inner')) {\n        footer.style.display = 'none';\n      }\n    });\n    \n    // Set specific element width to 100%\n    const targetElement = document.querySelector('#main > div.content.clearfix > div > div > div.group_2of3.first');\n    if (targetElement) {\n      targetElement.style.width = '100%';\n    }\n    \n    // Hide and remove sizing from specific elements\n    const firstChild = document.querySelector('#main > div.content.clearfix > div > div > div:nth-child(1)');\n    if (firstChild) {\n      firstChild.style.display = 'none';\n      firstChild.style.width = '0';\n      firstChild.style.height = '0';\n      firstChild.style.margin = '0';\n      firstChild.style.padding = '0';\n    }\n    \n    // Hide navigation\n    const nav = document.querySelector('#main > nav');\n    if (nav) {\n      nav.style.display = 'none';\n    }\n  }); \n" + '</' + 'script>' + "<script>\n(function () {\n  var NEW_NAME = \"ImpactLife\";\n  var OLD_NAME = \"MVRBC\";\n\n  // --- 1) Update JSON-LD (application/ld+json) ---\n  function mutateNames(obj) {\n    if (!obj || typeof obj !== \"object\") return;\n    if (Array.isArray(obj)) {\n      obj.forEach(mutateNames);\n      return;\n    }\n    // Replace exact \"MVRBC\" in common places (and anywhere 'name' equals it)\n    if (typeof obj.name === \"string\" && obj.name.trim() === OLD_NAME) {\n      obj.name = NEW_NAME;\n    }\n    if (obj.author && typeof obj.author === \"object\") {\n      if (typeof obj.author.name === \"string\" && obj.author.name.trim() === OLD_NAME) {\n        obj.author.name = NEW_NAME;\n      }\n    }\n    if (obj.publisher && typeof obj.publisher === \"object\") {\n      if (typeof obj.publisher.name === \"string\" && obj.publisher.name.trim() === OLD_NAME) {\n        obj.publisher.name = NEW_NAME;\n      }\n    }\n    // Recurse through all properties\n    Object.keys(obj).forEach(function (k) {\n      if (obj[k] && typeof obj[k] === \"object\") mutateNames(obj[k]);\n    });\n  }\n\n  Array.prototype.forEach.call(\n    document.querySelectorAll('script[type=\"application/ld+json\"]'),\n    function (node) {\n      try {\n        // Some sites embed minified JSON; keep formatting minimal on write-back\n        var data = JSON.parse(node.textContent.trim());\n        mutateNames(data);\n        node.textContent = JSON.stringify(data);\n      } catch (e) {\n        // Ignore scripts that aren't valid JSON\n      }\n    }\n  );\n\n  // --- 2) (Optional) Replace visible text \"MVRBC\" with \"ImpactLife\" ---\n  // Comment out this block if you only want the JSON-LD change.\n  (function replaceVisibleText() {\n    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {\n      acceptNode: function (n) {\n        // Skip empty/whitespace text nodes\n        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;\n        // Skip text under these elements\n        var p = n.parentNode;\n        while (p) {\n          var tag = (p.tagName || \"\").toLowerCase();\n          if (tag === \"script\" || tag === \"style\" || tag === \"noscript\" || tag === \"textarea\") {\n            return NodeFilter.FILTER_REJECT;\n          }\n          p = p.parentNode;\n        }\n        return NodeFilter.FILTER_ACCEPT;\n      }\n    });\n\n    var re = new RegExp(\"\\\\b\" + OLD_NAME.replace(/[.*+?^${}()|[\\]\\\\]/g, \"\\\\$&\") + \"\\\\b\", \"g\");\n    var node;\n    while ((node = walker.nextNode())) {\n      if (re.test(node.nodeValue)) {\n        node.nodeValue = node.nodeValue.replace(re, NEW_NAME);\n      }\n    }\n   })();\n })();\n " + '</' + 'script>' + "<script>\n // Override schema.org data for social media previews\n (function() {\n   // Update any existing JSON-LD schema\n   const jsonLdScripts = document.querySelectorAll('script[type=\"application/ld+json\"]');\n   jsonLdScripts.forEach(script => {\n     try {\n       const data = JSON.parse(script.textContent);\n       if (data.publisher && data.publisher.name === 'MVRBC') {\n         data.publisher.name = 'ImpactLife';\n       }\n       if (data.author && data.author.name === 'MVRBC') {\n         data.author.name = 'ImpactLife';\n       }\n       if (data.name && data.name.includes('MVRBC')) {\n         data.name = data.name.replace(/MVRBC/g, 'ImpactLife');\n       }\n       script.textContent = JSON.stringify(data);\n     } catch (e) {\n       // Ignore invalid JSON\n     }\n   });\n   \n   // Add new schema to override any global schema\n   const newSchema = {\n     \"@context\": \"https://schema.org\",\n     \"@type\": \"Article\",\n     \"headline\": \"Feel-Good News - ImpactLife\",\n     \"description\": \"Stay updated with the latest feel-good news from ImpactLife. Read inspiring stories about blood donation, community impact, and life-saving moments.\",\n     \"publisher\": {\n       \"@type\": \"Organization\",\n       \"name\": \"ImpactLife\",\n       \"url\": \"https://www.bloodcenter.org\"\n     },\n     \"author\": {\n       \"@type\": \"Organization\", \n       \"name\": \"ImpactLife\"\n     },\n     \"datePublished\": \"2025-10-24\",\n     \"dateModified\": \"2025-10-24\"\n   };\n   \n   const schemaScript = document.createElement('script');\n   schemaScript.type = 'application/ld+json';\n   schemaScript.textContent = JSON.stringify(newSchema);\n   document.head.appendChild(schemaScript);\n })();\n " + '</' + 'script>' + "";
             templateContent = templateString;
         }
 
@@ -461,8 +100,16 @@
                 const dateString = year + '-' + month + '-' + day;
                 document.getElementById('publicationDate').value = dateString;
                 publicationDate = formatDate(dateString);
+                // Set default Employee Spotlight values in form fields
+                document.getElementById('employeeSpotlightName').value = employeeSpotlight.name;
+                document.getElementById('employeeSpotlightTitle').value = employeeSpotlight.title;
+                document.getElementById('employeeSpotlightImageUrl').value = employeeSpotlight.imageUrl;
                 addArticle();
                 setupDragDrop();
+                // Initialize Employee Spotlight Quill editor
+                setTimeout(function() {
+                    initEmployeeSpotlightQuill();
+                }, 100);
                 // Show initial preview after a short delay
                 setTimeout(function() {
                     updateOutputRealTime();
@@ -490,6 +137,11 @@
 
         function updatePublicationDate(dateString) {
             publicationDate = formatDate(dateString);
+            updateOutputRealTime(); // Real-time update
+        }
+
+        function updateEmployeeSpotlight(field, value) {
+            employeeSpotlight[field] = value;
             updateOutputRealTime(); // Real-time update
         }
 
@@ -791,6 +443,61 @@
             }
         }
 
+        function initEmployeeSpotlightQuill() {
+            // Wait for Quill to be available
+            if (typeof Quill === 'undefined') {
+                console.warn('Quill not loaded yet, retrying...');
+                setTimeout(function() {
+                    initEmployeeSpotlightQuill();
+                }, 500);
+                return;
+            }
+            
+            try {
+                const editorId = 'employeeSpotlightContent';
+                const editorElement = document.getElementById(editorId);
+                
+                if (!editorElement) {
+                    console.warn('Employee Spotlight editor element not found:', editorId);
+                    return;
+                }
+                
+                // Check if already initialized
+                if (employeeSpotlightQuill) {
+                    return;
+                }
+                
+                // Create Quill instance
+                const quill = new Quill(editorElement, {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic'],
+                            ['link'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }]
+                        ]
+                    },
+                    placeholder: 'Enter article body content...'
+                });
+                
+                // Store editor instance
+                employeeSpotlightQuill = quill;
+                
+                // Update employee spotlight content on change
+                quill.on('text-change', function() {
+                    employeeSpotlight.content = quill.root.innerHTML;
+                    updateOutputRealTime(); // Real-time update
+                });
+                
+                // Set initial content if exists (currently empty, so placeholder will show)
+                if (employeeSpotlight.content) {
+                    quill.root.innerHTML = employeeSpotlight.content;
+                }
+            } catch (error) {
+                console.error('Error initializing Employee Spotlight Quill:', error);
+            }
+        }
+
         function slugify(text) {
             return text
                 .toString()
@@ -864,6 +571,20 @@
             // Replace publication date placeholder
             const datePattern = '\\$FORMVALUE_PUBLICATION_DATE';
             output = output.replace(new RegExp(datePattern, 'g'), publicationDate || 'October 24, 2025');
+
+            // Replace Employee Spotlight placeholders
+            // Get content from Quill editor if available
+            let employeeContent = '';
+            if (employeeSpotlightQuill) {
+                employeeContent = employeeSpotlightQuill.root.innerHTML;
+            } else {
+                employeeContent = employeeSpotlight.content || '';
+            }
+            
+            output = output.replace(/\$EMPLOYEE_SPOTLIGHT_NAME/g, escapeHtml(employeeSpotlight.name || ''));
+            output = output.replace(/\$EMPLOYEE_SPOTLIGHT_TITLE/g, escapeHtml(employeeSpotlight.title || ''));
+            output = output.replace(/\$EMPLOYEE_SPOTLIGHT_URL/g, escapeHtml(employeeSpotlight.imageUrl || ''));
+            output = output.replace(/\$EMPLOYEE_SPOTLIGHT_CONTENT/g, employeeContent);
 
             // Collect all gallery URLs from all articles
             const allGalleryUrls = [];
