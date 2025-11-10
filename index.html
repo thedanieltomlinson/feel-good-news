@@ -6,6 +6,62 @@
     <title>FGN Builder</title>
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link href="includes/css/styles.min.css" rel="stylesheet">
+    <style>
+        /* Employee Spotlight accordion styles - not in compiled CSS */
+        .employee-spotlight-section.article-group {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 0;
+            margin-bottom: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .employee-spotlight-section.article-group:hover {
+            border-color: #0c2a4a;
+        }
+        .employee-spotlight-section.article-group.collapsed .article-content {
+            display: none;
+        }
+        .employee-spotlight-section.article-group .article-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            user-select: none;
+            background: white;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+        .employee-spotlight-section.article-group .article-header:hover {
+            background: #f5f5f5;
+        }
+        .employee-spotlight-section.article-group .article-header .article-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        .employee-spotlight-section.article-group .article-header .article-header-left .article-toggle {
+            font-size: 18px;
+            color: #0c2a4a;
+            transition: transform 0.3s ease;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+        .employee-spotlight-section.article-group .article-header .article-header-left .article-number {
+            font-weight: 700;
+            color: #0c2a4a;
+            font-size: 18px;
+        }
+        .employee-spotlight-section.article-group .article-content {
+            padding: 10px;
+            transition: all 0.3s ease;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -19,6 +75,9 @@
                     <div class="form-group">
                         <label class="required">Publication Date</label>
                         <input type="date" id="publicationDate" onchange="updatePublicationDate(this.value)" />
+                        <div id="dateRequiredMessage" style="margin-top: 8px; padding: 8px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404; font-size: 14px; display: block;">
+                            ⚠️ Please set a publication date before adding articles or filling out content.
+                        </div>
                     </div>
                 </div>
 
@@ -36,6 +95,22 @@
                     <button type="button" class="copy-btn" onclick="copyToClipboard()">
                         Copy Code
                     </button>
+                    <button type="button" class="copy-btn" onclick="showImportModal()" style="background: #0c2a4a;">
+                        Import HTML
+                    </button>
+                </div>
+
+                <!-- Import Modal -->
+                <div id="importModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; overflow-y: auto;" onclick="if(event.target.id === 'importModal') closeImportModal();">
+                    <div style="max-width: 800px; margin: 50px auto; background: white; padding: 24px; border-radius: 8px; position: relative;" onclick="event.stopPropagation();">
+                        <h2 style="margin-top: 0;">Import HTML</h2>
+                        <p style="color: #666; margin-bottom: 16px;">Paste the HTML output from this system to import existing content:</p>
+                        <textarea id="importHtmlTextarea" style="width: 100%; height: 300px; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;" placeholder="Paste HTML here..."></textarea>
+                        <div style="margin-top: 16px; display: flex; gap: 12px; justify-content: flex-end;">
+                            <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="importHtml()" style="background: #0c2a4a; color: white;">Import</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="employee-spotlight-section article-group" id="employeeSpotlightGroup">
@@ -50,15 +125,15 @@
                     <div class="article-content">
                     <div class="form-group">
                         <label class="required">Name</label>
-                        <input type="text" id="employeeSpotlightName" value="Daniel Tomlinson" oninput="updateEmployeeSpotlight('name', this.value)" placeholder="Enter employee name" />
+                        <input type="text" id="employeeSpotlightName" value="First Last" oninput="updateEmployeeSpotlight('name', this.value)" placeholder="Enter employee name" />
                     </div>
                     <div class="form-group">
                         <label class="required">Title</label>
-                        <input type="text" id="employeeSpotlightTitle" value="Digital Marketing Specialist" oninput="updateEmployeeSpotlight('title', this.value)" placeholder="Enter employee title" />
+                        <input type="text" id="employeeSpotlightTitle" value="Job Title" oninput="updateEmployeeSpotlight('title', this.value)" placeholder="Enter employee title" />
                     </div>
                     <div class="form-group">
                         <label class="required">Image URL</label>
-                            <input type="text" id="employeeSpotlightImageUrl" value="https://www.bloodcenter.org/webres/Image/FGN/10242025/RoseSzczurek.jpg" oninput="updateEmployeeSpotlight('imageUrl', this.value)" placeholder="Enter image path (e.g., /webres/Image/FGN/10242025/image.jpg)" />
+                            <input type="text" id="employeeSpotlightImageUrl" value="https://www.bloodcenter.org/webres/Image/placeholder.jpg" oninput="updateEmployeeSpotlight('imageUrl', this.value)" placeholder="Enter image path (e.g., /webres/Image/FGN/10242025/image.jpg)" />
                     </div>
                     <div class="form-group">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -92,9 +167,9 @@
         let publicationDate = ''; // Store the selected publication date
         let publicationDateISO = ''; // Store the ISO format date (YYYY-MM-DD) for schema
         let employeeSpotlight = {
-            name: 'Daniel Tomlinson',
-            title: 'Digital Marketing Specialist',
-            imageUrl: 'https://www.bloodcenter.org/webres/Image/FGN/10242025/RoseSzczurek.jpg',
+            name: 'First Last',
+            title: 'Job Title',
+            imageUrl: 'https://www.bloodcenter.org/webres/Image/placeholder.jpg',
             questions: [] // Array of {question: '', answer: ''} objects
         };
         let thankTheDonor = {
@@ -120,15 +195,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 initializeTemplate();
-                // Set default date to today
-                const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + 1).padStart(2, '0');
-                const day = String(today.getDate()).padStart(2, '0');
-                const dateString = year + '-' + month + '-' + day;
-                document.getElementById('publicationDate').value = dateString;
-                publicationDate = formatDate(dateString);
-                publicationDateISO = dateString; // Set initial ISO date
+                // Don't set default date - require user to manually set it
+                // Initialize with empty date
+                publicationDate = '';
+                publicationDateISO = '';
+                
+                // Disable article controls until date is set
+                disableArticleControls();
                 // Set default Employee Spotlight values in form fields
                 document.getElementById('employeeSpotlightName').value = employeeSpotlight.name;
                 document.getElementById('employeeSpotlightTitle').value = employeeSpotlight.title;
@@ -144,7 +217,8 @@
                     ];
                 }
                 renderEmployeeSpotlightQuestions();
-                addArticle();
+                // Don't add article automatically - require date first
+                // addArticle();
                 setupDragDrop();
                 // Show initial preview after a short delay
                 setTimeout(function() {
@@ -193,7 +267,103 @@
         function updatePublicationDate(dateString) {
             publicationDate = formatDate(dateString);
             publicationDateISO = dateString || ''; // Store ISO format for schema
+            
+            // Enable/disable article controls based on whether date is set
+            if (dateString && dateString.trim()) {
+                enableArticleControls();
+            } else {
+                disableArticleControls();
+            }
+            
             updateOutputRealTime(); // Real-time update
+        }
+
+        function disableArticleControls() {
+            // Show date required message
+            const dateMessage = document.getElementById('dateRequiredMessage');
+            if (dateMessage) {
+                dateMessage.style.display = 'block';
+            }
+            
+            // Disable Add Article button
+            const addArticleBtn = document.querySelector('.add-article-btn');
+            if (addArticleBtn) {
+                addArticleBtn.disabled = true;
+                addArticleBtn.style.opacity = '0.5';
+                addArticleBtn.style.cursor = 'not-allowed';
+                addArticleBtn.title = 'Please set a publication date first';
+            }
+            
+            // Disable Add Thank the Donor button
+            const addThankDonorBtn = document.getElementById('addThankDonorBtn');
+            if (addThankDonorBtn) {
+                addThankDonorBtn.disabled = true;
+                addThankDonorBtn.style.opacity = '0.5';
+                addThankDonorBtn.style.cursor = 'not-allowed';
+                addThankDonorBtn.title = 'Please set a publication date first';
+            }
+            
+            // Disable all article form fields
+            articles.forEach(function(article, index) {
+                const articleDiv = document.getElementById(article.id);
+                if (articleDiv) {
+                    const inputs = articleDiv.querySelectorAll('input, textarea, button:not(.btn-danger)');
+                    inputs.forEach(function(input) {
+                        input.disabled = true;
+                        input.style.opacity = '0.5';
+                        input.style.cursor = 'not-allowed';
+                    });
+                    
+                    // Disable Quill editors
+                    if (quillEditors[article.id]) {
+                        quillEditors[article.id].enable(false);
+                    }
+                }
+            });
+        }
+
+        function enableArticleControls() {
+            // Hide date required message
+            const dateMessage = document.getElementById('dateRequiredMessage');
+            if (dateMessage) {
+                dateMessage.style.display = 'none';
+            }
+            
+            // Enable Add Article button
+            const addArticleBtn = document.querySelector('.add-article-btn');
+            if (addArticleBtn) {
+                addArticleBtn.disabled = false;
+                addArticleBtn.style.opacity = '1';
+                addArticleBtn.style.cursor = 'pointer';
+                addArticleBtn.title = '';
+            }
+            
+            // Enable Add Thank the Donor button
+            const addThankDonorBtn = document.getElementById('addThankDonorBtn');
+            if (addThankDonorBtn) {
+                addThankDonorBtn.disabled = false;
+                addThankDonorBtn.style.opacity = '1';
+                addThankDonorBtn.style.cursor = 'pointer';
+                addThankDonorBtn.title = '';
+            }
+            
+            // Enable all article form fields
+            articles.forEach(function(article, index) {
+                const articleDiv = document.getElementById(article.id);
+                if (articleDiv) {
+                    const inputs = articleDiv.querySelectorAll('input, textarea, button:not(.btn-danger)');
+                    inputs.forEach(function(input) {
+                        input.disabled = false;
+                        input.style.opacity = '1';
+                        input.style.cursor = '';
+                    });
+                    
+                    // Enable Quill editors
+                    if (quillEditors[article.id]) {
+                        quillEditors[article.id].enable(true);
+                    }
+                }
+            });
         }
 
         function updateEmployeeSpotlight(field, value) {
@@ -211,6 +381,14 @@
         }
 
         function addThankDonor() {
+            // Check if publication date is set
+            const dateInput = document.getElementById('publicationDate');
+            if (!dateInput || !dateInput.value || !dateInput.value.trim()) {
+                alert('Please set a publication date before adding a Thank the Donor section.');
+                dateInput.focus();
+                return;
+            }
+            
             thankTheDonor.enabled = true;
             thankTheDonor.collapsed = false;
             document.getElementById('addThankDonorBtn').style.display = 'none';
@@ -331,10 +509,18 @@
             employeeSpotlightCollapsed = !employeeSpotlightCollapsed;
             const section = document.getElementById('employeeSpotlightGroup');
             if (section) {
+                const toggleIcon = section.querySelector('.article-toggle');
+                
                 if (employeeSpotlightCollapsed) {
                     section.classList.add('collapsed');
+                    if (toggleIcon) {
+                        toggleIcon.textContent = '►';
+                    }
                 } else {
                     section.classList.remove('collapsed');
+                    if (toggleIcon) {
+                        toggleIcon.textContent = '▼';
+                    }
                 }
             }
         }
@@ -515,6 +701,14 @@
         }
 
         function addArticle() {
+            // Check if publication date is set
+            const dateInput = document.getElementById('publicationDate');
+            if (!dateInput || !dateInput.value || !dateInput.value.trim()) {
+                alert('Please set a publication date before adding articles.');
+                dateInput.focus();
+                return;
+            }
+            
             try {
                 console.log('addArticle called');
                 const articleId = 'article-' + articleCounter++;
@@ -575,9 +769,16 @@
                 return;
             }
 
-            // Get publication date and format as MMDDYYYY
+            // Check if publication date is set
             const dateInput = document.getElementById('publicationDate');
-            const dateString = dateInput ? dateInput.value : '';
+            if (!dateInput || !dateInput.value || !dateInput.value.trim()) {
+                alert('Please set a publication date before uploading gallery images.');
+                dateInput.focus();
+                return;
+            }
+
+            // Get publication date and format as MMDDYYYY
+            const dateString = dateInput.value;
             const datePath = formatDateMMDDYYYY(dateString);
             
             // Base URL for images
@@ -715,6 +916,14 @@
                 // Re-render Thank the Donor section if enabled
                 if (thankTheDonor.enabled) {
                     renderThankDonor();
+                }
+                
+                // Disable/enable article controls based on date
+                const dateInput = document.getElementById('publicationDate');
+                if (!dateInput || !dateInput.value || !dateInput.value.trim()) {
+                    disableArticleControls();
+                } else {
+                    enableArticleControls();
                 }
             }, 50);
         }
@@ -1357,8 +1566,6 @@
                     thankDonorMediaHtml = '<div class="media single">\n        <img class="masonry-image" alt="' + escapeHtml(imageAlt) + '" src="' + escapeHtml(imageSrc) + '" />\n      </div>';
                 }
                 
-                const thankDonorHtml = '\n<!-- Thank the Donor -->\n<section class="thank-donor-section masonry-item" style="background: #f4b322; color: #fff; border-radius: var(--radius); padding: 22px 20px; box-shadow: 0 2px 10px rgba(12,42,74,.06);">\n  <h2 style="color: #fff; font-family: \'Roboto Condensed\', Helvetica, sans-serif; font-weight: 700; text-transform: uppercase; margin-bottom: 12px;">' + escapeHtml(thankTheDonor.title) + '</h2>\n  <p style="color: #fff;">' + thankDonorBody + '</p>\n  ' + thankDonorMediaHtml + '\n</section>\n';
-                
                 // Find Employee Spotlight section and wrap both in a side-by-side container
                 // The Employee Spotlight is after the main-grid closes, so we need to find it and move it inside main-grid
                 const employeeSpotlightPattern = /<!-- Employee Spotlight -->\s*<section class="callout bottom-spotlight"([^>]*)>([\s\S]*?)<\/section>/;
@@ -1366,48 +1573,41 @@
                     const match = output.match(employeeSpotlightPattern);
                     const employeeSpotlightContent = match[2];
                     
+                    // Create Thank the Donor HTML without masonry-item class (it's inside a grid container now)
+                    // Explicitly override any grid-column rules from template CSS
+                    const thankDonorHtml = '\n<!-- Thank the Donor -->\n<section class="thank-donor-section" style="background: #f4b322; color: #fff; border-radius: var(--radius); padding: 22px 20px; box-shadow: 0 2px 10px rgba(12,42,74,.06); margin: 0; display: block; width: 100%; grid-column: 1; grid-row: 1;">\n  <h2 style="color: #fff; font-family: \'Roboto Condensed\', Helvetica, sans-serif; font-weight: 700; text-transform: uppercase; margin-bottom: 12px;">' + escapeHtml(thankTheDonor.title) + '</h2>\n  <p style="color: #fff;">' + thankDonorBody + '</p>\n  ' + thankDonorMediaHtml + '\n</section>\n';
+                    
                     // Build side-by-side container HTML
                     // Use column-span: all to break out of masonry columns, then use CSS Grid for side-by-side layout
-                    const sideBySideHtml = '\n<!-- Side-by-Side Container for Thank the Donor and Employee Spotlight -->\n<div class="side-by-side-container" style="column-span: all; -webkit-column-span: all; display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); margin-top: var(--gap); width: 100%; break-inside: avoid;">\n' + thankDonorHtml + '\n<!-- Employee Spotlight -->\n<section class="callout bottom-spotlight" style="margin: 0;">' + employeeSpotlightContent + '</section>\n</div>\n';
+                    // Both sections should split the width 50/50
+                    // Remove masonry-item from children since they're in a grid container
+                    // Explicitly set grid-column on Employee Spotlight to place it in the second column
+                    const sideBySideHtml = '\n<!-- Side-by-Side Container for Thank the Donor and Employee Spotlight -->\n<div class="side-by-side-container masonry-item" style="column-span: all; -webkit-column-span: all; display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); margin-top: var(--gap); width: 100%; break-inside: avoid;">\n' + thankDonorHtml + '\n<!-- Employee Spotlight -->\n<section class="callout bottom-spotlight" style="margin: 0; display: block; width: 100%; grid-column: 2; grid-row: 1;">' + employeeSpotlightContent + '</section>\n</div>\n';
                     
-                    // Replace Employee Spotlight with empty string, then insert side-by-side container before main-grid closes
-                    // Pattern: find </div> that closes main-grid (right before Employee Spotlight)
-                    // We'll replace: </div>\n<!-- Employee Spotlight -->... with </div>\n[side-by-side]\n
-                    // But we need to insert INSIDE main-grid, so find where main-grid closes
-                    const replacePattern = /(<\/div>\s*)<!-- Employee Spotlight -->\s*<section class="callout bottom-spotlight"([^>]*)>([\s\S]*?)<\/section>/;
-                    if (replacePattern.test(output)) {
-                        // Insert the side-by-side container INSIDE main-grid before it closes
-                        // The pattern matches </div> (closes main-grid) followed by Employee Spotlight
-                        // We want: </div> (closes sidebar) + [side-by-side] + </div> (closes main-grid)
-                        // So we need to insert BEFORE the </div> that closes main-grid
-                        const beforeEmployeeSpotlight = output.indexOf('<!-- Employee Spotlight -->');
-                        if (beforeEmployeeSpotlight !== -1) {
-                            // Find the </div> that closes main-grid (should be right before Employee Spotlight)
-                            const beforeSection = output.substring(0, beforeEmployeeSpotlight);
-                            const lastDivIndex = beforeSection.lastIndexOf('</div>');
-                            
-                            if (lastDivIndex !== -1) {
-                                // Remove Employee Spotlight first
-                                output = output.replace(employeeSpotlightPattern, '');
-                                
-                                // Insert side-by-side container before main-grid closes
-                                const beforeMainGridClose = output.substring(0, lastDivIndex);
-                                const afterMainGridClose = output.substring(lastDivIndex);
-                                output = beforeMainGridClose + sideBySideHtml + afterMainGridClose;
-                            } else {
-                                // Fallback: use the replace pattern
-                                output = output.replace(replacePattern, '$1' + sideBySideHtml);
-                            }
+                    // Remove Employee Spotlight from its current location (outside main-grid)
+                    output = output.replace(employeeSpotlightPattern, '');
+                    
+                    // Insert side-by-side container INSIDE main-grid before it closes
+                    // Find the closing </div> of main-grid (which is before Footer)
+                    const mainGridClosePattern = /(<\/div>\s*)(<!-- Footer -->)/;
+                    if (mainGridClosePattern.test(output)) {
+                        const beforeFooter = output.substring(0, output.indexOf('<!-- Footer -->'));
+                        const lastDivIndex = beforeFooter.lastIndexOf('</div>');
+                        
+                        if (lastDivIndex !== -1) {
+                            // Insert side-by-side container before main-grid closes
+                            const beforeMainGridClose = output.substring(0, lastDivIndex);
+                            const afterMainGridClose = output.substring(lastDivIndex);
+                            output = beforeMainGridClose + sideBySideHtml + afterMainGridClose;
                         } else {
-                            // Fallback: use the replace pattern
-                            output = output.replace(replacePattern, '$1' + sideBySideHtml);
+                            // Fallback: insert before Footer
+                            output = output.replace(mainGridClosePattern, sideBySideHtml + '$1$2');
                         }
                     } else {
-                        // Fallback: remove Employee Spotlight and insert before Footer
-                        output = output.replace(employeeSpotlightPattern, '');
-                        const beforeFooterPattern = /<\/div>\s*<!-- Footer -->/;
-                        if (beforeFooterPattern.test(output)) {
-                            output = output.replace(beforeFooterPattern, sideBySideHtml + '</div>\n<!-- Footer -->');
+                        // Fallback: try to find main-grid closing tag
+                        const mainGridRegex = /(<div class="main-grid">[\s\S]*?)(<\/div>\s*)(<!-- Footer -->)/;
+                        if (mainGridRegex.test(output)) {
+                            output = output.replace(mainGridRegex, '$1' + sideBySideHtml + '$2$3');
                         }
                     }
                 } else {
@@ -1418,16 +1618,51 @@
                     }
                 }
             } else {
-                // When Thank the Donor is not present, ensure Employee Spotlight spans full width
-                const employeeSpotlightPattern = /<!-- Employee Spotlight -->\s*<section class="callout bottom-spotlight"([^>]*)>/;
+                // When Thank the Donor is not present, move Employee Spotlight inside main-grid and ensure it spans full width
+                const employeeSpotlightPattern = /<!-- Employee Spotlight -->\s*<section class="callout bottom-spotlight"([^>]*)>([\s\S]*?)<\/section>/;
                 if (employeeSpotlightPattern.test(output)) {
-                    output = output.replace(employeeSpotlightPattern, function(match, attrs) {
-                        // Ensure grid-column: 1 / -1 for full width
-                        if (!attrs.includes('grid-column')) {
-                            return '<!-- Employee Spotlight -->\n<section class="callout bottom-spotlight" style="grid-column: 1 / -1; order: 5;">';
+                    const match = output.match(employeeSpotlightPattern);
+                    const employeeSpotlightContent = match[2];
+                    const employeeSpotlightAttrs = match[1] || '';
+                    
+                    // Remove Employee Spotlight from its current location (outside main-grid)
+                    output = output.replace(employeeSpotlightPattern, '');
+                    
+                    // Create Employee Spotlight with full width styling
+                    const fullWidthSpotlight = '\n<!-- Employee Spotlight -->\n<section class="callout bottom-spotlight masonry-item" style="column-span: all; -webkit-column-span: all; width: 100%; break-inside: avoid; margin-top: var(--gap);">' + employeeSpotlightContent + '</section>\n';
+                    
+                    // Find the main-grid closing tag specifically by tracking div depth
+                    // This ensures we find the correct closing tag for main-grid, not the wrapper
+                    const mainGridStartIndex = output.indexOf('<div class="main-grid">');
+                    if (mainGridStartIndex !== -1) {
+                        // Find the matching closing </div> for main-grid by tracking depth
+                        let depth = 0;
+                        let mainGridCloseIndex = -1;
+                        
+                        for (let i = mainGridStartIndex; i < output.length; i++) {
+                            // Check for opening div tag (but not self-closing)
+                            if (output.substring(i, i + 4) === '<div' && output.substring(i, i + 5) !== '<div/') {
+                                // Make sure it's not a closing tag
+                                if (i === 0 || output[i - 1] !== '/') {
+                                    depth++;
+                                }
+                            } else if (output.substring(i, i + 6) === '</div>') {
+                                depth--;
+                                if (depth === 0) {
+                                    // Found the closing tag for main-grid
+                                    mainGridCloseIndex = i + 6;
+                                    break;
+                                }
+                            }
                         }
-                        return match;
-                    });
+                        
+                        if (mainGridCloseIndex !== -1) {
+                            // Insert Employee Spotlight before the closing </div> of main-grid
+                            const beforeMainGridClose = output.substring(0, mainGridCloseIndex);
+                            const afterMainGridClose = output.substring(mainGridCloseIndex);
+                            output = beforeMainGridClose + fullWidthSpotlight + afterMainGridClose;
+                        }
+                    }
                 }
             }
 
@@ -1442,11 +1677,58 @@
             }
             codeOutputEl.textContent = output;
             
+            // Save current scroll position and focused element before updating preview
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+            const activeElement = document.activeElement;
+            let cursorPosition = null;
+            let inputValue = null;
+            
+            // Save cursor position if active element is a text input
+            if (activeElement && activeElement.tagName === 'INPUT' && activeElement.type === 'text') {
+                cursorPosition = activeElement.selectionStart;
+                inputValue = activeElement.value;
+            }
+            
             // Update preview
             const previewFrame = document.getElementById('previewFrame');
             if (previewFrame) {
                 previewFrame.srcdoc = output;
             }
+            
+            // Restore scroll position and focus after a brief delay to allow iframe to update
+            setTimeout(function() {
+                // Restore scroll position first
+                window.scrollTo(scrollLeft, scrollTop);
+                
+                if (activeElement && activeElement.tagName === 'INPUT' && activeElement.type === 'text') {
+                    // Restore focus if the input still exists, but prevent scroll
+                    try {
+                        // Get the element's position relative to viewport
+                        const rect = activeElement.getBoundingClientRect();
+                        const elementTop = rect.top + scrollTop;
+                        const elementLeft = rect.left + scrollLeft;
+                        
+                        // Focus without scrolling
+                        activeElement.focus({ preventScroll: true });
+                        
+                        // Restore cursor position if we saved it
+                        if (cursorPosition !== null && activeElement.setSelectionRange) {
+                            // Use the current value length as a fallback if cursor position is out of bounds
+                            const maxPos = activeElement.value.length;
+                            const pos = Math.min(cursorPosition, maxPos);
+                            activeElement.setSelectionRange(pos, pos);
+                        }
+                        
+                        // Ensure scroll position is still correct after focus
+                        window.scrollTo(scrollLeft, scrollTop);
+                    } catch (e) {
+                        // Ignore focus errors (element might have been removed)
+                        // Still restore scroll position
+                        window.scrollTo(scrollLeft, scrollTop);
+                    }
+                }
+            }, 0);
         }
 
         // Debounced real-time update function
@@ -1487,6 +1769,339 @@
             }).catch(err => {
                 alert('Failed to copy: ' + err);
             });
+        }
+
+        function showImportModal() {
+            const modal = document.getElementById('importModal');
+            if (modal) {
+                modal.style.display = 'block';
+                const textarea = document.getElementById('importHtmlTextarea');
+                if (textarea) {
+                    textarea.value = '';
+                    textarea.focus();
+                }
+            }
+        }
+
+        function closeImportModal() {
+            const modal = document.getElementById('importModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function importHtml() {
+            const textarea = document.getElementById('importHtmlTextarea');
+            if (!textarea || !textarea.value.trim()) {
+                alert('Please paste HTML content to import.');
+                return;
+            }
+
+            const htmlContent = textarea.value.trim();
+            
+            try {
+                // Create a temporary DOM parser
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+                
+                // Extract publication date
+                const dateBadge = doc.querySelector('.date-badge');
+                if (dateBadge) {
+                    const dateText = dateBadge.textContent.trim();
+                    // Try to parse the date - it might be in "Month Day, Year" format
+                    // We'll need to convert it back to YYYY-MM-DD
+                    const dateInput = document.getElementById('publicationDate');
+                    if (dateInput) {
+                        // Try to find date in schema or parse from date badge
+                        const schemaScripts = doc.querySelectorAll('script[type="application/ld+json"]');
+                        let foundDate = null;
+                        schemaScripts.forEach(script => {
+                            try {
+                                const schema = JSON.parse(script.textContent);
+                                if (schema.datePublished) {
+                                    foundDate = schema.datePublished;
+                                }
+                            } catch (e) {
+                                // Ignore parse errors
+                            }
+                        });
+                        
+                        if (foundDate) {
+                            dateInput.value = foundDate;
+                            updatePublicationDate(foundDate);
+                        } else {
+                            // Try to parse from date badge text (e.g., "November 10, 2025")
+                            const dateMatch = dateText.match(/(\w+)\s+(\d+),\s+(\d+)/);
+                            if (dateMatch) {
+                                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                                  'July', 'August', 'September', 'October', 'November', 'December'];
+                                const month = monthNames.indexOf(dateMatch[1]);
+                                const day = parseInt(dateMatch[2]);
+                                const year = parseInt(dateMatch[3]);
+                                if (month !== -1) {
+                                    const dateString = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+                                    dateInput.value = dateString;
+                                    updatePublicationDate(dateString);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Extract articles
+                const articleElements = doc.querySelectorAll('article.card.masonry-item');
+                const importedArticles = [];
+                
+                articleElements.forEach((articleEl, index) => {
+                    const titleEl = articleEl.querySelector('h2');
+                    const imgEl = articleEl.querySelector('img.masonry-image');
+                    const videoEl = articleEl.querySelector('iframe');
+                    const mediaEl = articleEl.querySelector('.media');
+                    
+                    // Get all body content - get all p tags and combine their content
+                    let bodyContent = '';
+                    const allParagraphs = articleEl.querySelectorAll('p');
+                    
+                    if (allParagraphs.length > 0) {
+                        // Get all p tags that are direct children of the article (siblings)
+                        const siblingParagraphs = Array.from(articleEl.children).filter(child => child.tagName === 'P');
+                        
+                        if (siblingParagraphs.length > 1) {
+                            // Multiple sibling p tags - combine their outerHTML to preserve paragraph structure
+                            bodyContent = siblingParagraphs.map(p => p.outerHTML).join('');
+                        } else if (siblingParagraphs.length === 1) {
+                            // Single p tag (might have nested paragraphs inside) - get its innerHTML
+                            // This will include all nested content like multiple <p> tags inside
+                            bodyContent = siblingParagraphs[0].innerHTML;
+                        } else {
+                            // No direct child p tags, but there are p tags somewhere - get the first one's innerHTML
+                            // This handles nested structures
+                            bodyContent = allParagraphs[0].innerHTML;
+                        }
+                    }
+                    
+                    const article = {
+                        title: titleEl ? titleEl.textContent.trim() : '',
+                        body: bodyContent.trim(),
+                        imageUrl: imgEl ? imgEl.getAttribute('src') || '' : '',
+                        imageAlt: imgEl ? imgEl.getAttribute('alt') || '' : '',
+                        videoUrl: '',
+                        galleryUrls: []
+                    };
+                    
+                    // Extract video URL if present
+                    if (videoEl) {
+                        const videoSrc = videoEl.getAttribute('src') || '';
+                        // Convert embed URL back to regular URL if needed
+                        article.videoUrl = convertFromEmbedUrl(videoSrc);
+                    }
+                    
+                    // Extract gallery images from scripts
+                    const imgId = imgEl ? imgEl.getAttribute('id') : '';
+                    
+                    if (imgId) {
+                        // Look for gallery scripts that reference this image ID
+                        const scripts = doc.querySelectorAll('script');
+                        scripts.forEach(script => {
+                            const scriptText = script.textContent || '';
+                            
+                            // Check if this script references our image ID
+                            if (scriptText.includes('getElementById("' + imgId + '")')) {
+                                // This is a gallery script for this image
+                                // Extract the image array - look for formImages_ variable (can be multiline)
+                                // Pattern: const formImages_xxx = [ ... ]
+                                const arrayMatch = scriptText.match(/const\s+formImages_\w+\s*=\s*\[([\s\S]*?)\]/);
+                                if (arrayMatch) {
+                                    const urlsString = arrayMatch[1];
+                                    // Extract URLs from the array - handle multiline and quoted strings
+                                    const urlMatches = urlsString.match(/"([^"]+)"/g);
+                                    if (urlMatches) {
+                                        article.galleryUrls = urlMatches.map(match => {
+                                            return match.replace(/^"/, '').replace(/"$/, '').trim();
+                                        }).filter(url => url);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    
+                    // If we found gallery images, clear imageUrl since gallery takes priority
+                    if (article.galleryUrls.length > 0) {
+                        article.imageUrl = '';
+                        article.imageAlt = '';
+                    }
+                    
+                    importedArticles.push(article);
+                });
+                
+                // Extract Employee Spotlight
+                const spotlightSection = doc.querySelector('section.callout.bottom-spotlight');
+                if (spotlightSection) {
+                    const nameEl = spotlightSection.querySelector('h2');
+                    const titleEl = spotlightSection.querySelector('p');
+                    const imgEl = spotlightSection.querySelector('img.spotlight-photo');
+                    const contentEl = spotlightSection.querySelector('.spotlight-grid > div:last-child p');
+                    
+                    if (nameEl) {
+                        employeeSpotlight.name = nameEl.textContent.trim();
+                        document.getElementById('employeeSpotlightName').value = employeeSpotlight.name;
+                    }
+                    
+                    if (titleEl) {
+                        employeeSpotlight.title = titleEl.textContent.trim();
+                        document.getElementById('employeeSpotlightTitle').value = employeeSpotlight.title;
+                    }
+                    
+                    if (imgEl) {
+                        employeeSpotlight.imageUrl = imgEl.getAttribute('src') || '';
+                        document.getElementById('employeeSpotlightImageUrl').value = employeeSpotlight.imageUrl;
+                    }
+                    
+                    // Extract questions and answers from content
+                    if (contentEl) {
+                        const contentHtml = contentEl.innerHTML;
+                        // Parse Q&A pairs - they're in format <strong>Question</strong><br>Answer<br><br>
+                        const qaPairs = [];
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = contentHtml;
+                        
+                        let currentQuestion = '';
+                        let currentAnswer = '';
+                        const nodes = Array.from(tempDiv.childNodes);
+                        
+                        nodes.forEach(node => {
+                            if (node.nodeType === 1) { // Element node
+                                if (node.tagName === 'STRONG') {
+                                    if (currentQuestion && currentAnswer) {
+                                        qaPairs.push({question: currentQuestion.trim(), answer: currentAnswer.trim()});
+                                    }
+                                    currentQuestion = node.textContent.trim();
+                                    currentAnswer = '';
+                                } else if (node.tagName === 'BR') {
+                                    // Skip BR tags
+                                } else {
+                                    currentAnswer += (currentAnswer ? ' ' : '') + node.textContent.trim();
+                                }
+                            } else if (node.nodeType === 3) { // Text node
+                                if (currentQuestion) {
+                                    currentAnswer += (currentAnswer ? ' ' : '') + node.textContent.trim();
+                                }
+                            }
+                        });
+                        
+                        if (currentQuestion && currentAnswer) {
+                            qaPairs.push({question: currentQuestion.trim(), answer: currentAnswer.trim()});
+                        }
+                        
+                        if (qaPairs.length > 0) {
+                            employeeSpotlight.questions = qaPairs;
+                            renderEmployeeSpotlightQuestions();
+                        }
+                    }
+                }
+                
+                // Extract Thank the Donor section
+                const thankDonorSection = doc.querySelector('section.thank-donor-section');
+                if (thankDonorSection) {
+                    const titleEl = thankDonorSection.querySelector('h2');
+                    const bodyEl = thankDonorSection.querySelector('p');
+                    const imgEl = thankDonorSection.querySelector('img');
+                    
+                    if (titleEl) {
+                        thankTheDonor.title = titleEl.textContent.trim();
+                    }
+                    
+                    if (bodyEl) {
+                        thankTheDonor.body = bodyEl.innerHTML.trim();
+                    }
+                    
+                    if (imgEl) {
+                        thankTheDonor.imageUrl = imgEl.getAttribute('src') || '';
+                        thankTheDonor.imageAlt = imgEl.getAttribute('alt') || '';
+                    }
+                    
+                    thankTheDonor.enabled = true;
+                    // Hide the add button
+                    const addBtn = document.getElementById('addThankDonorBtn');
+                    if (addBtn) {
+                        addBtn.style.display = 'none';
+                    }
+                    renderThankDonor();
+                } else {
+                    // If no Thank the Donor section, disable it
+                    thankTheDonor.enabled = false;
+                    const addBtn = document.getElementById('addThankDonorBtn');
+                    if (addBtn) {
+                        addBtn.style.display = 'inline-block';
+                    }
+                }
+                
+                // Replace existing articles with imported ones
+                if (importedArticles.length > 0) {
+                    // Clear existing articles
+                    articles = [];
+                    articleCounter = 0;
+                    
+                    // Clear Quill editors
+                    Object.keys(quillEditors).forEach(key => {
+                        if (quillEditors[key]) {
+                            quillEditors[key] = null;
+                            delete quillEditors[key];
+                        }
+                    });
+                    
+                    // Add imported articles
+                    importedArticles.forEach(importedArticle => {
+                        const article = {
+                            id: 'article-' + (++articleCounter),
+                            title: importedArticle.title || '',
+                            body: importedArticle.body || '',
+                            imageUrl: importedArticle.imageUrl || '',
+                            imageAlt: importedArticle.imageAlt || '',
+                            videoUrl: importedArticle.videoUrl || '',
+                            galleryUrls: importedArticle.galleryUrls || [],
+                            collapsed: false
+                        };
+                        articles.push(article);
+                    });
+                    
+                    // Re-render everything
+                    renderArticles();
+                    setupDragDrop();
+                }
+                
+                // Close modal
+                closeImportModal();
+                
+                // Show success message
+                alert('HTML imported successfully! ' + importedArticles.length + ' article(s) imported.');
+                
+                // Update output
+                updateOutputRealTime();
+                
+            } catch (error) {
+                console.error('Import error:', error);
+                alert('Error importing HTML: ' + error.message);
+            }
+        }
+
+        // Helper function to convert embed URL back to regular URL
+        function convertFromEmbedUrl(embedUrl) {
+            if (!embedUrl) return '';
+            
+            // YouTube embed format: https://www.youtube.com/embed/VIDEO_ID
+            const youtubeMatch = embedUrl.match(/youtube\.com\/embed\/([^?]+)/);
+            if (youtubeMatch) {
+                return 'https://www.youtube.com/watch?v=' + youtubeMatch[1];
+            }
+            
+            // Vimeo embed format: https://player.vimeo.com/video/VIDEO_ID
+            const vimeoMatch = embedUrl.match(/vimeo\.com\/video\/([^?]+)/);
+            if (vimeoMatch) {
+                return 'https://vimeo.com/' + vimeoMatch[1];
+            }
+            
+            return embedUrl;
         }
 
         function setupDragDrop() {
