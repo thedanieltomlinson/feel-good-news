@@ -61,6 +61,79 @@
             padding: 10px;
             transition: all 0.3s ease;
         }
+        
+        /* Tooltip styles */
+        .tooltip-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-left: 6px;
+        }
+        .tooltip-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0c2a4a;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            vertical-align: middle;
+        }
+        .tooltip-icon:hover {
+            background: #e5253a;
+        }
+        .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            width: 280px;
+            max-width: calc(100vw - 40px);
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: calc(100% + 8px);
+            left: 0;
+            transform: translateX(0);
+            font-size: 13px;
+            line-height: 1.4;
+            transition: opacity 0.3s, visibility 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            word-wrap: break-word;
+            white-space: normal;
+        }
+        /* On smaller screens, position tooltip to the right */
+        @media (max-width: 600px) {
+            .tooltip-text {
+                left: auto;
+                right: 0;
+                transform: none;
+            }
+        }
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 20px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        @media (max-width: 600px) {
+            .tooltip-text::after {
+                left: auto;
+                right: 20px;
+            }
+        }
+        .tooltip-wrapper:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -133,7 +206,7 @@
                     </div>
                     <div class="form-group">
                         <label class="required">Image URL</label>
-                            <input type="text" id="employeeSpotlightImageUrl" value="https://www.bloodcenter.org/webres/Image/placeholder.jpg" oninput="updateEmployeeSpotlight('imageUrl', this.value)" placeholder="Enter image path (e.g., /webres/Image/FGN/10242025/image.jpg)" />
+                            <input type="text" id="employeeSpotlightImageUrl" value="https://www.bloodcenter.org/webres/Image/placeholder.jpg" oninput="updateEmployeeSpotlight('imageUrl', this.value)" placeholder="Enter filename only (e.g., image.jpg)" />
                     </div>
                     <div class="form-group">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -471,7 +544,7 @@
             html += '<div id="thankDonorContent" class="quill-editor"></div>';
             html += '<div class="error">Body content is required</div></div>';
             html += '<div class="form-group"><label>Image URL</label>';
-            html += '<input type="text" id="thankDonorImageUrl" value="' + escapeHtml(thankTheDonor.imageUrl) + '" oninput="updateThankDonor(\'imageUrl\', this.value); validateThankDonorImageAlt()" placeholder="Enter image path (e.g., /webres/Image/FGN/10242025/image.jpg)">';
+            html += '<input type="text" id="thankDonorImageUrl" value="' + escapeHtml(thankTheDonor.imageUrl) + '" oninput="updateThankDonor(\'imageUrl\', this.value); validateThankDonorImageAlt()" placeholder="Enter filename only (e.g., image.jpg)">';
             html += '</div>';
             html += '<div class="form-group"><label id="thankDonorImageAltLabel">Image Alt Text</label>';
             html += '<input type="text" id="thankDonorImageAlt" value="' + escapeHtml(thankTheDonor.imageAlt) + '" oninput="updateThankDonor(\'imageAlt\', this.value)" placeholder="Enter image alt text">';
@@ -755,12 +828,20 @@
         function addGalleryImage(articleIndex) {
             articles[articleIndex].galleryUrls.push('');
             renderArticles();
+            // Validate image alt after rendering
+            setTimeout(function() {
+                validateImageAlt(articleIndex);
+            }, 100);
             updateOutputRealTime(); // Real-time update
         }
 
         function removeGalleryImage(articleIndex, imageIndex) {
             articles[articleIndex].galleryUrls.splice(imageIndex, 1);
             renderArticles();
+            // Validate image alt after rendering
+            setTimeout(function() {
+                validateImageAlt(articleIndex);
+            }, 100);
             updateOutputRealTime(); // Real-time update
         }
 
@@ -809,6 +890,10 @@
             
             // Re-render articles to show new URLs
             renderArticles();
+            // Validate image alt after rendering
+            setTimeout(function() {
+                validateImageAlt(articleIndex);
+            }, 100);
             updateOutputRealTime();
         }
 
@@ -849,7 +934,7 @@
                 var galleryHtml = '';
                 article.galleryUrls.forEach(function(url, imgIndex) {
                     galleryHtml += '<div class="gallery-item">';
-                    galleryHtml += '<input type="text" value="' + escapeHtml(url) + '" oninput="updateGalleryImage(' + index + ', ' + imgIndex + ', this.value)" placeholder="Enter image path (e.g., /webres/Image/FGN/10242025/image.jpg)">';
+                    galleryHtml += '<input type="text" value="' + escapeHtml(url) + '" oninput="updateGalleryImage(' + index + ', ' + imgIndex + ', this.value)" placeholder="Enter filename only (e.g., image.jpg)">';
                     galleryHtml += '<button type="button" class="btn btn-danger btn-small" onclick="removeGalleryImage(' + index + ', ' + imgIndex + ')">Remove</button>';
                     galleryHtml += '</div>';
                 });
@@ -875,25 +960,22 @@
                 // Don't escape HTML here - Quill will handle it, but we need to set it as innerHTML after Quill is initialized
                 html += '<div id="body-' + article.id + '" class="quill-editor"></div>';
                 html += '<div class="error">Body content is required</div></div>';
-                html += '<div class="form-group"><label>Image URL</label>';
-                html += '<input type="text" id="imageUrl-' + article.id + '" value="' + escapeHtml(article.imageUrl) + '" oninput="updateArticle(' + index + ', &quot;imageUrl&quot;, this.value); validateImageAlt(' + index + ')" placeholder="Enter image path (e.g., /webres/Image/FGN/10242025/image.jpg)">';
-                html += '</div>';
-                html += '<div class="form-group"><label id="imageAltLabel-' + article.id + '">Image Alt Text</label>';
-                html += '<input type="text" id="imageAlt-' + article.id + '" value="' + escapeHtml(article.imageAlt) + '" oninput="updateArticle(' + index + ', &quot;imageAlt&quot;, this.value)" placeholder="Enter image alt text">';
-                html += '<div class="error">Image Alt Text is required when Image URL is provided</div></div>';
                 html += '<div class="form-group"><label>Video URL</label>';
                 html += '<input type="text" id="videoUrl-' + article.id + '" value="' + escapeHtml(article.videoUrl) + '" oninput="updateArticle(' + index + ', &quot;videoUrl&quot;, this.value)" placeholder="Enter video URL (YouTube, Vimeo, etc.)">';
                 html += '</div>';
                 html += '<div class="gallery-section">';
                 html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">';
-                html += '<label style="margin: 0;">Gallery Images</label>';
+                html += '<label style="margin: 0;">Images<span class="tooltip-wrapper"><span class="tooltip-icon">?</span><span class="tooltip-text">Add one image for a single photo, or multiple images for a slideshow gallery.</span></span></label>';
                 html += '<div style="display: flex; gap: 8px;">';
-                html += '<button type="button" class="btn btn-secondary btn-small" onclick="addGalleryImage(' + index + ')">+ Add Gallery Image</button>';
+                html += '<button type="button" class="btn btn-secondary btn-small" onclick="addGalleryImage(' + index + ')">+ Add Image</button>';
                 html += '<label for="gallery-upload-' + article.id + '" class="btn btn-secondary btn-small" style="margin: 0; cursor: pointer;">📁 Upload Files</label>';
                 html += '<input type="file" id="gallery-upload-' + article.id + '" multiple accept="image/*" style="display: none;" onchange="handleGalleryUpload(' + index + ', this.files)">';
                 html += '</div>';
                 html += '</div>';
                 html += '<div id="gallery-' + article.id + '">' + galleryHtml + '</div>';
+                html += '<div class="form-group" style="margin-top: 12px;"><label id="imageAltLabel-' + article.id + '">Image Alt Text<span class="tooltip-wrapper"><span class="tooltip-icon">?</span><span class="tooltip-text">Describe the image with your eyes closed to help out friends with visual impairments.</span></span></label>';
+                html += '<input type="text" id="imageAlt-' + article.id + '" value="' + escapeHtml(article.imageAlt || '') + '" oninput="updateArticle(' + index + ', &quot;imageAlt&quot;, this.value)" placeholder="Enter image alt text">';
+                html += '<div class="error">Image Alt Text is required when images are provided</div></div>';
                 html += '</div>';
                 html += '</div>'; // Close article-content
                 
@@ -909,8 +991,10 @@
             
             // Reinitialize all Quill editors after rendering
             setTimeout(function() {
-                articles.forEach(function(article) {
+                articles.forEach(function(article, index) {
                     initQuill(article.id);
+                    // Validate image alt for each article
+                    validateImageAlt(index);
                 });
                 
                 // Re-render Thank the Donor section if enabled
@@ -943,16 +1027,6 @@
         }
 
         function updateArticle(index, field, value) {
-            // Normalize image URLs
-            if (field === 'imageUrl' && value) {
-                value = normalizeImageUrl(value);
-                // Update the input field with normalized value
-                const article = articles[index];
-                const input = document.getElementById('imageUrl-' + article.id);
-                if (input && input.value !== value) {
-                    input.value = value;
-                }
-            }
             articles[index][field] = value;
             
             // Update article header text when title changes
@@ -963,6 +1037,11 @@
                     const order = index + 1;
                     headerElement.textContent = value && value.trim() ? value.trim() : 'Article ' + order;
                 }
+            }
+            
+            // Validate image alt when imageAlt field changes
+            if (field === 'imageAlt') {
+                validateImageAlt(index);
             }
             
             validateForm();
@@ -984,21 +1063,26 @@
                 }
             }
             articles[articleIndex].galleryUrls[imageIndex] = value;
+            // Validate image alt when gallery images change
+            validateImageAlt(articleIndex);
             updateOutputRealTime(); // Real-time update
         }
 
         function validateImageAlt(index) {
             const article = articles[index];
-            const imageUrlInput = document.getElementById('imageUrl-' + article.id);
             const imageAltInput = document.getElementById('imageAlt-' + article.id);
             const imageAltLabel = document.getElementById('imageAltLabel-' + article.id);
-            const formGroup = imageAltInput.closest('.form-group');
+            const formGroup = imageAltInput ? imageAltInput.closest('.form-group') : null;
 
-            // Check if gallery images exist - if so, Image URL field is not required
+            if (!formGroup || !imageAltInput || !imageAltLabel) {
+                return;
+            }
+
+            // Check if gallery images exist
             const hasGalleryImages = article.galleryUrls && article.galleryUrls.length > 0 && article.galleryUrls.some(url => url && url.trim());
             
-            // Only require Image Alt if Image URL has a value AND no gallery images exist
-            if (imageUrlInput.value.trim() && !hasGalleryImages) {
+            // Require Image Alt if gallery images exist
+            if (hasGalleryImages) {
                 imageAltLabel.classList.add('required');
                 if (!imageAltInput.value.trim()) {
                     formGroup.classList.add('has-error');
@@ -1006,7 +1090,7 @@
                     formGroup.classList.remove('has-error');
                 }
             } else {
-                // If gallery images exist or Image URL is empty, Image Alt is not required
+                // If no gallery images, Image Alt is not required
                 imageAltLabel.classList.remove('required');
                 formGroup.classList.remove('has-error');
             }
@@ -1018,7 +1102,6 @@
             articles.forEach((article, index) => {
                 const titleInput = document.getElementById('title-' + article.id);
                 const bodyInput = document.getElementById('body-' + article.id);
-                const imageUrlInput = document.getElementById('imageUrl-' + article.id);
                 const imageAltInput = document.getElementById('imageAlt-' + article.id);
 
                 // Validate title
@@ -1155,13 +1238,28 @@
                 return 'https:' + url;
             }
             
-            // If it starts with /, prepend the domain
+            // If it starts with /, prepend the domain (full path provided)
             if (url.startsWith('/')) {
                 return 'https://www.bloodcenter.org' + url;
             }
             
-            // Otherwise, prepend the domain with a slash
-            return 'https://www.bloodcenter.org/' + url;
+            // Otherwise, treat it as just a filename and construct the full path
+            // Get the publication date from the date input
+            const dateInput = document.getElementById('publicationDate');
+            let datePath = '';
+            if (dateInput && dateInput.value && dateInput.value.trim()) {
+                datePath = formatDateMMDDYYYY(dateInput.value);
+            } else {
+                // Fallback to today's date if no date is set
+                const today = new Date();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const year = today.getFullYear();
+                datePath = month + day + year;
+            }
+            
+            // Construct the full URL: https://www.bloodcenter.org/webres/Image/FGN/MMDDYYYY/filename
+            return 'https://www.bloodcenter.org/webres/Image/FGN/' + datePath + '/' + url;
         }
 
         function convertToEmbedUrl(url) {
@@ -1296,31 +1394,23 @@
                     bodyContent = bodyElement ? bodyElement.innerHTML : '';
                 }
 
-                // Replace placeholders
+                // Replace placeholders (for backwards compatibility - articles are rebuilt dynamically below)
                 const titlePattern = '\\$FORMVALUE_TITLE_' + articleNumber;
                 const bodyPattern = '\\$FORMVALUE_BODY_CONTENT_' + articleNumber;
-                const imageUrlPattern = '\\$FORMVALUE_IMAGE_URL_' + articleNumber;
-                const imageAltPattern = '\\$FORMVALUE_IMAGE_ALT_' + articleNumber;
                 const videoUrlPattern = '\\$FORMVALUE_VIDEO_URL_' + articleNumber;
-                const imageIdPattern = '\\$FORMVALUE_IMAGE_ID_' + articleNumber;
                 
                 output = output.replace(new RegExp(titlePattern, 'g'), escapeHtml(article.title));
                 output = output.replace(new RegExp(bodyPattern, 'g'), bodyContent);
                 
-                // Only replace image/video placeholders if they have values, otherwise remove the entire tag/element
-                if (article.imageUrl.trim()) {
-                    output = output.replace(new RegExp(imageUrlPattern, 'g'), escapeHtml(normalizeImageUrl(article.imageUrl)));
-                    output = output.replace(new RegExp(imageAltPattern, 'g'), escapeHtml(article.imageAlt));
-                    output = output.replace(new RegExp(imageIdPattern, 'g'), imageId);
-                } else {
-                    // Remove empty image tags - match img tag with the placeholder URL
+                // Remove old image URL placeholders (no longer used - using galleryUrls exclusively)
+                const imageUrlPattern = '\\$FORMVALUE_IMAGE_URL_' + articleNumber;
+                const imageAltPattern = '\\$FORMVALUE_IMAGE_ALT_' + articleNumber;
+                const imageIdPattern = '\\$FORMVALUE_IMAGE_ID_' + articleNumber;
                     const emptyImagePattern = '<img[^>]*src="\\$FORMVALUE_IMAGE_URL_' + articleNumber + '"[^>]*\\s*/>';
                     output = output.replace(new RegExp(emptyImagePattern, 'g'), '');
-                    // Also remove the image alt and id placeholders
                     output = output.replace(new RegExp(imageAltPattern, 'g'), '');
                     output = output.replace(new RegExp(imageIdPattern, 'g'), '');
                     output = output.replace(new RegExp(imageUrlPattern, 'g'), '');
-                }
                 
                 if (article.videoUrl.trim()) {
                     // Convert video URL to embed format
@@ -1374,7 +1464,8 @@
                 let allGalleryScripts = '';
                 articles.forEach(function(article, index) {
                     const articleGalleryUrls = article.galleryUrls ? article.galleryUrls.filter(url => url && url.trim()).map(url => normalizeImageUrl(url.trim())) : [];
-                    if (articleGalleryUrls.length > 0) {
+                    // Only create slideshow script if there are 2+ images (1 image = single photo, no slideshow)
+                    if (articleGalleryUrls.length > 1) {
                         // Generate image ID - use title if available, otherwise use article number
                         let articleImageId = article.title.trim() ? slugify(article.title) : '';
                         if (!articleImageId) {
@@ -1470,22 +1561,23 @@
                     bodyContent = bodyElement ? bodyElement.innerHTML : '';
                 }
 
-                // Generate image ID - use title if available, otherwise use article number as fallback
-                let imageId = article.title.trim() ? slugify(article.title) : '';
-                // If no imageId from title but we have gallery images, use article number as ID
+                // Check if we have gallery images
                 const hasGalleryImages = article.galleryUrls && article.galleryUrls.length > 0 && article.galleryUrls.some(url => url && url.trim());
-                if (!imageId && hasGalleryImages) {
-                    imageId = 'article-' + articleNumber;
+                const galleryImageCount = hasGalleryImages ? article.galleryUrls.filter(url => url && url.trim()).length : 0;
+                
+                // Generate image ID - only needed if there are 2+ images (for slideshow)
+                let imageId = '';
+                if (galleryImageCount > 1) {
+                    // Only add ID if there are 2+ images (for slideshow script)
+                    imageId = article.title.trim() ? slugify(article.title) : '';
+                    if (!imageId) {
+                        imageId = 'article-' + articleNumber;
+                    }
                 }
                 
                 let mediaContent = '';
-                // Add image if URL has a value OR if there are gallery images
-                // IMPORTANT: Gallery images ALWAYS take priority - if gallery images exist, ignore Image URL field
-                const hasImageUrl = article.imageUrl && article.imageUrl.trim();
-                
-                // If gallery images exist, use them exclusively and ignore Image URL field
+                // Use gallery images only (single image field removed - now using galleryUrls for all images)
                 if (hasGalleryImages) {
-                    // Use gallery images - ignore Image URL field completely
                     const firstGalleryImage = article.galleryUrls.find(url => url && url.trim());
                     if (firstGalleryImage) {
                         const imageSrc = normalizeImageUrl(firstGalleryImage.trim());
@@ -1493,18 +1585,13 @@
                         if (!imageAlt && article.title) {
                             imageAlt = article.title;
                         }
-                        const finalImageId = imageId || 'article-' + articleNumber;
-                        mediaContent += '<img class="masonry-image" alt="' + escapeHtml(imageAlt) + '" id="' + finalImageId + '" src="' + escapeHtml(imageSrc) + '" />';
-                    }
-                } else if (hasImageUrl) {
-                    // Only use Image URL if NO gallery images exist
-                    const imageSrc = normalizeImageUrl(article.imageUrl);
-                    const imageAlt = article.imageAlt || '';
-                    const finalImageId = imageId || '';
-                    if (finalImageId) {
-                        mediaContent += '<img class="masonry-image" alt="' + escapeHtml(imageAlt) + '" id="' + finalImageId + '" src="' + escapeHtml(imageSrc) + '" />';
-                    } else {
-                        mediaContent += '<img class="masonry-image" alt="' + escapeHtml(imageAlt) + '" src="' + escapeHtml(imageSrc) + '" />';
+                        // Only add ID if there are 2+ images (for slideshow)
+                        if (galleryImageCount > 1) {
+                            mediaContent += '<img class="masonry-image" alt="' + escapeHtml(imageAlt) + '" id="' + imageId + '" src="' + escapeHtml(imageSrc) + '" />';
+                        } else {
+                            // Single image - no ID needed (no slideshow)
+                            mediaContent += '<img class="masonry-image" alt="' + escapeHtml(imageAlt) + '" src="' + escapeHtml(imageSrc) + '" />';
+                        }
                     }
                 }
                 // Only add video if URL has a value
@@ -1516,7 +1603,7 @@
 
                 // Determine media class based on what's actually present
                 let mediaClass = '';
-                const hasImage = hasImageUrl || hasGalleryImages;
+                const hasImage = hasGalleryImages;
                 const hasVideo = article.videoUrl && article.videoUrl.trim();
                 if (hasImage && hasVideo) {
                     mediaClass = ''; // Both present - use default grid
@@ -1530,7 +1617,7 @@
                     mediaHtml = '<div class="media ' + mediaClass + '">\n        ' + mediaContent + '\n      </div>';
                 }
                 
-                const articleHtml = '\n    <!-- Story ' + articleNumber + ' -->\n    <article class="card masonry-item">\n      <h2>' + escapeHtml(article.title) + '</h2>\n      <p>' + bodyContent + '</p>\n      ' + mediaHtml + '\n    </article>';
+                const articleHtml = '\n    <!-- Story ' + articleNumber + ' -->\n    <article class="card masonry-item" style="order: ' + order + ';">\n      <h2>' + escapeHtml(article.title) + '</h2>\n      <p>' + bodyContent + '</p>\n      ' + mediaHtml + '\n    </article>';
 
                 allArticles.push(articleHtml);
             });
@@ -1684,8 +1771,13 @@
             let cursorPosition = null;
             let inputValue = null;
             
-            // Save cursor position if active element is a text input
-            if (activeElement && activeElement.tagName === 'INPUT' && activeElement.type === 'text') {
+            // Save cursor position if active element is a text input or textarea
+            const isTextInput = activeElement && (
+                (activeElement.tagName === 'INPUT' && (activeElement.type === 'text' || activeElement.type === '')) ||
+                activeElement.tagName === 'TEXTAREA'
+            );
+            
+            if (isTextInput) {
                 cursorPosition = activeElement.selectionStart;
                 inputValue = activeElement.value;
             }
@@ -1697,38 +1789,57 @@
             }
             
             // Restore scroll position and focus after a brief delay to allow iframe to update
-            setTimeout(function() {
-                // Restore scroll position first
-                window.scrollTo(scrollLeft, scrollTop);
-                
-                if (activeElement && activeElement.tagName === 'INPUT' && activeElement.type === 'text') {
-                    // Restore focus if the input still exists, but prevent scroll
-                    try {
-                        // Get the element's position relative to viewport
-                        const rect = activeElement.getBoundingClientRect();
-                        const elementTop = rect.top + scrollTop;
-                        const elementLeft = rect.left + scrollLeft;
-                        
-                        // Focus without scrolling
-                        activeElement.focus({ preventScroll: true });
-                        
-                        // Restore cursor position if we saved it
-                        if (cursorPosition !== null && activeElement.setSelectionRange) {
-                            // Use the current value length as a fallback if cursor position is out of bounds
-                            const maxPos = activeElement.value.length;
-                            const pos = Math.min(cursorPosition, maxPos);
-                            activeElement.setSelectionRange(pos, pos);
+            // Use requestAnimationFrame for better timing
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    // Restore scroll position first
+                    window.scrollTo({
+                        left: scrollLeft,
+                        top: scrollTop,
+                        behavior: 'auto'
+                    });
+                    
+                    if (isTextInput && activeElement && document.body.contains(activeElement)) {
+                        // Restore focus if the input still exists, but prevent scroll
+                        try {
+                            // Focus without scrolling
+                            activeElement.focus({ preventScroll: true });
+                            
+                            // Restore cursor position if we saved it
+                            if (cursorPosition !== null && activeElement.setSelectionRange) {
+                                // Use the current value length as a fallback if cursor position is out of bounds
+                                const maxPos = activeElement.value.length;
+                                const pos = Math.min(cursorPosition, maxPos);
+                                activeElement.setSelectionRange(pos, pos);
+                            }
+                            
+                            // Ensure scroll position is still correct after focus
+                            requestAnimationFrame(function() {
+                                window.scrollTo({
+                                    left: scrollLeft,
+                                    top: scrollTop,
+                                    behavior: 'auto'
+                                });
+                            });
+                        } catch (e) {
+                            // Ignore focus errors (element might have been removed)
+                            // Still restore scroll position
+                            window.scrollTo({
+                                left: scrollLeft,
+                                top: scrollTop,
+                                behavior: 'auto'
+                            });
                         }
-                        
-                        // Ensure scroll position is still correct after focus
-                        window.scrollTo(scrollLeft, scrollTop);
-                    } catch (e) {
-                        // Ignore focus errors (element might have been removed)
-                        // Still restore scroll position
-                        window.scrollTo(scrollLeft, scrollTop);
+                    } else {
+                        // If no active element or it's not a text input, just restore scroll position
+                        window.scrollTo({
+                            left: scrollLeft,
+                            top: scrollTop,
+                            behavior: 'auto'
+                        });
                     }
-                }
-            }, 0);
+                });
+            });
         }
 
         // Debounced real-time update function
