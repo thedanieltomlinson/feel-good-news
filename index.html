@@ -1553,8 +1553,10 @@
                     galleryHtml += '</div>';
                     // Caption field (shown if enabled)
                     if (caption.enabled) {
-                        galleryHtml += '<div class="gallery-caption-field" style="margin-top: 8px;">';
-                        galleryHtml += '<input type="text" id="gallery-caption-' + article.id + '-' + imgIndex + '" value="' + escapeHtml(caption.text || '') + '" oninput="updateGalleryCaption(' + index + ', ' + imgIndex + ', this.value)" placeholder="Enter image caption/description (optional)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">';
+                        const normalizedImageUrl = normalizeImageUrl(url);
+                        galleryHtml += '<div class="gallery-caption-field" style="margin-top: 8px; display: flex; gap: 12px; align-items: flex-start;">';
+                        galleryHtml += '<img id="gallery-thumbnail-' + article.id + '-' + imgIndex + '" src="' + escapeHtml(normalizedImageUrl) + '" alt="Thumbnail preview" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; flex-shrink: 0; background: #f0f0f0;" onerror="this.style.display=\'none\'">';
+                        galleryHtml += '<input type="text" id="gallery-caption-' + article.id + '-' + imgIndex + '" value="' + escapeHtml(caption.text || '') + '" oninput="updateGalleryCaption(' + index + ', ' + imgIndex + ', this.value)" placeholder="Enter image caption/description (optional)" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">';
                         galleryHtml += '</div>';
                     }
                     galleryHtml += '</div>';
@@ -1703,6 +1705,15 @@
                     if (inputs[imageIndex] && inputs[imageIndex].value !== value) {
                         inputs[imageIndex].value = value;
                     }
+                }
+                // Update thumbnail if it exists
+                const thumbnail = document.getElementById('gallery-thumbnail-' + article.id + '-' + imageIndex);
+                if (thumbnail) {
+                    thumbnail.src = value;
+                    thumbnail.style.display = 'block';
+                    thumbnail.onerror = function() {
+                        this.style.display = 'none';
+                    };
                 }
             }
             articles[articleIndex].galleryUrls[imageIndex] = value;
