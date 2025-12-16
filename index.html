@@ -194,7 +194,11 @@
                     </div>
                     <div class="form-group">
                         <label class="required">Image URL</label>
-                            <input type="text" id="employeeSpotlightImageUrl" value="https://www.bloodcenter.org/webres/Image/placeholder.jpg" oninput="updateEmployeeSpotlight('imageUrl', this.value)" placeholder="Enter filename only (e.g., image.jpg)" />
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="employeeSpotlightImageUrl" value="https://www.bloodcenter.org/webres/Image/placeholder.jpg" oninput="updateEmployeeSpotlight('imageUrl', this.value)" placeholder="Enter filename only (e.g., image.jpg)" style="flex: 1;" />
+                            <label for="employeeSpotlight-upload" class="btn btn-secondary btn-small" style="margin: 0; cursor: pointer;">📁 Upload File</label>
+                            <input type="file" id="employeeSpotlight-upload" accept="image/*" style="display: none;" onchange="handleEmployeeSpotlightImageUpload(this.files)">
+                        </div>
                     </div>
                     <div class="form-group">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -572,13 +576,17 @@
         }
 
         function updateEmployeeSpotlight(field, value) {
-            // Normalize image URLs
+            // Normalize image URLs only if it's not the placeholder
             if (field === 'imageUrl' && value) {
-                value = normalizeImageUrl(value);
-                // Update the input field with normalized value
-                const input = document.getElementById('employeeSpotlightImageUrl');
-                if (input && input.value !== value) {
-                    input.value = value;
+                const placeholderUrl = 'https://www.bloodcenter.org/webres/Image/placeholder.jpg';
+                // Only normalize if it's not the placeholder and not already a full URL
+                if (value !== placeholderUrl && !value.match(/^https?:\/\//i)) {
+                    value = normalizeImageUrl(value);
+                    // Update the input field with normalized value
+                    const input = document.getElementById('employeeSpotlightImageUrl');
+                    if (input && input.value !== value) {
+                        input.value = value;
+                    }
                 }
             }
             employeeSpotlight[field] = value;
@@ -1321,17 +1329,17 @@
                     collapsed: false, // Track accordion state
                     galleryCollapsed: false // Track gallery section collapsed state
                 };
-                // Add article at the beginning of the array so it appears at the top
-                articles.unshift(article);
+                // Add article at the end of the array so it appears at the bottom
+                articles.push(article);
                 console.log('Article added, total articles:', articles.length);
 
                 renderArticles();
                 setupDragDrop();
                 updateOutputRealTime(); // Real-time update after adding article
                 
-                // Scroll to top to show the new article
+                // Scroll to bottom to show the new article
                 setTimeout(function() {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
                 }, 100);
             } catch (error) {
                 console.error('Error adding article:', error);
@@ -1497,6 +1505,51 @@
             setTimeout(function() {
                 validateImageAlt(articleIndex);
             }, 100);
+            updateOutputRealTime();
+        }
+
+        function handleEmployeeSpotlightImageUpload(files) {
+            if (!files || files.length === 0) {
+                return;
+            }
+
+            // Check if publication date is set
+            const dateInput = document.getElementById('publicationDate');
+            if (!dateInput || !dateInput.value || !dateInput.value.trim()) {
+                alert('Please set a publication date before uploading the employee spotlight image.');
+                dateInput.focus();
+                return;
+            }
+
+            // Get publication date and format as MMDDYYYY
+            const dateString = dateInput.value;
+            const datePath = formatDateMMDDYYYY(dateString);
+            
+            // Base URL for images
+            const baseUrl = 'https://www.bloodcenter.org/webres/Image/FGN/' + datePath + '/';
+            
+            // Use the first file (single image upload)
+            const file = files[0];
+            const fileName = file.name;
+            // URL encode the filename in case it has special characters
+            const encodedFileName = encodeURIComponent(fileName);
+            const fullUrl = baseUrl + encodedFileName;
+            
+            // Update the employee spotlight image URL
+            employeeSpotlight.imageUrl = fullUrl;
+            
+            // Update the input field
+            const input = document.getElementById('employeeSpotlightImageUrl');
+            if (input) {
+                input.value = fullUrl;
+            }
+            
+            // Clear the file input
+            const fileInput = document.getElementById('employeeSpotlight-upload');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            
             updateOutputRealTime();
         }
 
