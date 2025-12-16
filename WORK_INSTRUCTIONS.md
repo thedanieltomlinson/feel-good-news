@@ -105,7 +105,11 @@ The Feel Good News (FGN) Template Builder is a web-based tool that helps you cre
 2. Fill in:
    - **Name**: Employee's full name (default: "First Last")
    - **Job Title**: Employee's position (default: "Job Title")
-   - **Image URL**: Enter just the filename (default: `placeholder.jpg`)
+   - **Image URL**: 
+     - Enter just the filename (e.g., `employee-photo.jpg`) - the system will automatically construct the full URL using the publication date
+     - **OR** click **"📁 Upload File"** to select an image file from your computer
+     - The upload button will automatically construct the full URL using the publication date folder structure
+     - The default placeholder will remain until you upload or enter a new image
 3. Answer the default questions:
    - **Time at ImpactLife**: How long the employee has been with the company
    - **Blood Type**: Default is "O Positive" (can be edited)
@@ -339,6 +343,9 @@ The Shareable Content Studio helps you create engaging graphics and quote cards 
 - All default questions can be edited or removed
 - Add custom questions as needed for special features
 - The image defaults to a placeholder - remember to update it!
+- **Image Upload**: Use the "📁 Upload File" button to easily upload employee photos
+  - The system automatically uses the publication date to place files in the correct folder
+  - Just like article images, employee spotlight images go in: `https://www.bloodcenter.org/webres/Image/FGN/MMDDYYYY/`
 
 ### Preview Pane
 - Use the preview to catch formatting issues early
@@ -411,7 +418,7 @@ Before publishing, verify:
   - [ ] Titles and images are populated (either auto-fetched or manually entered)
   - [ ] Gallery navigation works (if multiple stories)
 - [ ] Employee Spotlight name and title are updated (not defaults)
-- [ ] Employee Spotlight image is updated (not placeholder)
+- [ ] Employee Spotlight image is updated (not placeholder) - use the upload button or enter filename
 - [ ] All Employee Spotlight questions are answered
 - [ ] Preview looks correct
 - [ ] Gallery navigation works (if using galleries)
