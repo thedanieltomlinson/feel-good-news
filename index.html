@@ -576,19 +576,6 @@
         }
 
         function updateEmployeeSpotlight(field, value) {
-            // Normalize image URLs only if it's not the placeholder
-            if (field === 'imageUrl' && value) {
-                const placeholderUrl = 'https://www.bloodcenter.org/webres/Image/placeholder.jpg';
-                // Only normalize if it's not the placeholder and not already a full URL
-                if (value !== placeholderUrl && !value.match(/^https?:\/\//i)) {
-                    value = normalizeImageUrl(value);
-                    // Update the input field with normalized value
-                    const input = document.getElementById('employeeSpotlightImageUrl');
-                    if (input && input.value !== value) {
-                        input.value = value;
-                    }
-                }
-            }
             employeeSpotlight[field] = value;
             updateOutputRealTime(); // Real-time update
         }
@@ -1077,14 +1064,7 @@
         }
 
         function updateThankDonor(field, value) {
-            // Normalize image URLs
-            if (field === 'imageUrl' && value) {
-                value = normalizeImageUrl(value);
-                // Update the input field with normalized value
-                const input = document.getElementById('thankDonorImageUrl');
-                if (input && input.value !== value) {
-                    input.value = value;
-                }
+            if (field === 'imageUrl') {
                 validateThankDonorImageAlt();
             }
             thankTheDonor[field] = value;
@@ -1468,13 +1448,13 @@
             const baseUrl = 'https://www.bloodcenter.org/webres/Image/FGN/' + datePath + '/';
             
             // Extract filenames and construct URLs
+            // Store the plain filename - encoding will happen when URL is used
             const newUrls = [];
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 const fileName = file.name;
-                // URL encode the filename in case it has special characters
-                const encodedFileName = encodeURIComponent(fileName);
-                const fullUrl = baseUrl + encodedFileName;
+                // Store as full URL with plain filename - normalizeImageUrl will encode when needed
+                const fullUrl = baseUrl + fileName;
                 newUrls.push(fullUrl);
             }
             
@@ -1531,9 +1511,8 @@
             // Use the first file (single image upload)
             const file = files[0];
             const fileName = file.name;
-            // URL encode the filename in case it has special characters
-            const encodedFileName = encodeURIComponent(fileName);
-            const fullUrl = baseUrl + encodedFileName;
+            // Store with plain filename - normalizeImageUrl will encode when needed
+            const fullUrl = baseUrl + fileName;
             
             // Update the employee spotlight image URL
             employeeSpotlight.imageUrl = fullUrl;
@@ -1747,29 +1726,18 @@
         }
 
         function updateGalleryImage(articleIndex, imageIndex, value) {
-            // Normalize gallery image URLs
-            if (value) {
-                value = normalizeImageUrl(value);
-                // Update the input field with normalized value
-                const article = articles[articleIndex];
-                const galleryContainer = document.getElementById('gallery-' + article.id);
-                if (galleryContainer) {
-                    const inputs = galleryContainer.querySelectorAll('input[type="text"]');
-                    if (inputs[imageIndex] && inputs[imageIndex].value !== value) {
-                        inputs[imageIndex].value = value;
-                    }
-                }
-                // Update thumbnail if it exists
-                const thumbnail = document.getElementById('gallery-thumbnail-' + article.id + '-' + imageIndex);
-                if (thumbnail) {
-                    thumbnail.src = value;
-                    thumbnail.style.display = 'block';
-                    thumbnail.onerror = function() {
-                        this.style.display = 'none';
-                    };
-                }
+            articles[articleIndex].galleryUrls[imageIndex] = value || '';
+            // Update thumbnail if it exists (normalize only for display)
+            const article = articles[articleIndex];
+            const thumbnail = document.getElementById('gallery-thumbnail-' + article.id + '-' + imageIndex);
+            if (thumbnail && value) {
+                const normalizedUrl = normalizeImageUrl(value);
+                thumbnail.src = normalizedUrl;
+                thumbnail.style.display = 'block';
+                thumbnail.onerror = function() {
+                    this.style.display = 'none';
+                };
             }
-            articles[articleIndex].galleryUrls[imageIndex] = value;
             // Validate image alt when gallery images change
             validateImageAlt(articleIndex);
             updateOutputRealTime(); // Real-time update
@@ -1987,12 +1955,31 @@
         }
 
         function escapeHtml(text) {
+            if (text == null) {
+                return '';
+            }
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
+        // Escape JavaScript string for use in JavaScript code embedded in HTML
+        // This properly escapes quotes, backslashes, and other JS special characters
+        function escapeJsString(text) {
+            if (text == null) {
+                return '';
+            }
+            return String(text)
+                .replace(/\\/g, '\\\\')  // Escape backslashes first
+                .replace(/"/g, '\\"')    // Escape double quotes
+                .replace(/'/g, "\\'")    // Escape single quotes
+                .replace(/\n/g, '\\n')   // Escape newlines
+                .replace(/\r/g, '\\r')   // Escape carriage returns
+                .replace(/\t/g, '\\t');  // Escape tabs
+        }
+
         // Normalize image URLs to always start with https://www.bloodcenter.org
+        // Encodes the filename part if it contains special characters that need encoding
         function normalizeImageUrl(url) {
             if (!url || !url.trim()) {
                 return '';
@@ -2000,9 +1987,31 @@
             
             url = url.trim();
             
-            // If it already starts with http:// or https://, return as-is
+            // If it already starts with http:// or https://, check if filename needs encoding
             if (url.match(/^https?:\/\//i)) {
-                return url;
+                try {
+                    const urlObj = new URL(url);
+                    const pathname = urlObj.pathname;
+                    const lastSlash = pathname.lastIndexOf('/');
+                    if (lastSlash >= 0 && lastSlash < pathname.length - 1) {
+                        const filename = pathname.substring(lastSlash + 1);
+                        // Check if filename is already URL-encoded (contains % followed by hex digits)
+                        const isEncoded = /%[0-9A-Fa-f]{2}/.test(filename);
+                        // Check if filename contains characters that need encoding
+                        const needsEncoding = /[^a-zA-Z0-9._-]/.test(filename);
+                        
+                        if (filename && needsEncoding && !isEncoded) {
+                            // Filename has special chars and isn't encoded - encode it
+                            const encodedFilename = encodeURIComponent(filename);
+                            urlObj.pathname = pathname.substring(0, lastSlash + 1) + encodedFilename;
+                            return urlObj.toString();
+                        }
+                    }
+                    return url; // Already properly formatted
+                } catch (e) {
+                    // If URL parsing fails, return as-is
+                    return url;
+                }
             }
             
             // If it starts with //, prepend https:
@@ -2010,7 +2019,7 @@
                 return 'https:' + url;
             }
             
-            // If it starts with /, prepend the domain (full path provided)
+            // If it starts with /, prepend the domain
             if (url.startsWith('/')) {
                 return 'https://www.bloodcenter.org' + url;
             }
@@ -2030,8 +2039,11 @@
                 datePath = month + day + year;
             }
             
+            // URL-encode the filename to handle special characters like &, ', $, etc.
+            const encodedFilename = encodeURIComponent(url);
+            
             // Construct the full URL: https://www.bloodcenter.org/webres/Image/FGN/MMDDYYYY/filename
-            return 'https://www.bloodcenter.org/webres/Image/FGN/' + datePath + '/' + url;
+            return 'https://www.bloodcenter.org/webres/Image/FGN/' + datePath + '/' + encodedFilename;
         }
 
         function convertToEmbedUrl(url) {
@@ -2245,33 +2257,53 @@
                             articleImageId = 'article-' + articleNumber;
                         }
                         // Convert hyphens to underscores for valid JS identifier (hyphens aren't valid in JS var names)
-                        const jsSafeId = articleImageId.replace(/-/g, '_');
+                        let jsSafeId = articleImageId.replace(/-/g, '_');
+                        // Ensure jsSafeId starts with a valid character (letter, underscore, or dollar sign)
+                        // JavaScript identifiers cannot start with a number
+                        if (jsSafeId && /^[0-9]/.test(jsSafeId)) {
+                            jsSafeId = '_' + jsSafeId;
+                        }
                         // Ensure jsSafeId is valid (not empty and valid JS identifier)
                         if (jsSafeId && jsSafeId.length > 0 && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(jsSafeId)) {
                             const galleryUrlsString = articleGalleryUrls.map(function(url) {
-                                return '"' + escapeHtml(url) + '"';
+                                return '"' + escapeJsString(url) + '"';
                             }).join(',\n      ');
                             
                             // Build captions array and alt texts array matching the order of galleryUrls
                             const galleryCaptionsArray = [];
                             const galleryAltTextsArray = [];
                             const fallbackAlt = article.imageAlt || article.title || 'Image';
-                            articleGalleryUrls.forEach(function(url) {
-                                // Find the index of this URL in the original article.galleryUrls array
-                                const originalIndex = article.galleryUrls.findIndex(function(u) {
-                                    return normalizeImageUrl(u && u.trim() ? u.trim() : '') === url;
-                                });
-                                // Build caption
-                                if (originalIndex >= 0 && article.galleryCaptions && article.galleryCaptions[originalIndex] && article.galleryCaptions[originalIndex].enabled && article.galleryCaptions[originalIndex].text && article.galleryCaptions[originalIndex].text.trim()) {
-                                    const captionText = article.galleryCaptions[originalIndex].text.trim();
-                                    galleryCaptionsArray.push('"' + escapeHtml(captionText) + '"');
-                                    // Use caption as alt text
-                                    galleryAltTextsArray.push('"' + escapeHtml(captionText) + '"');
-                                } else {
-                                    galleryCaptionsArray.push('""');
-                                    // Use fallback alt text
-                                    galleryAltTextsArray.push('"' + escapeHtml(fallbackAlt) + '"');
+                            
+                            // Ensure we process every URL and always add entries
+                            articleGalleryUrls.forEach(function(url, urlIndex) {
+                                let captionText = '';
+                                let altText = fallbackAlt;
+                                
+                                // Try to find the original index by comparing normalized URLs
+                                let originalIndex = -1;
+                                for (let i = 0; i < article.galleryUrls.length; i++) {
+                                    const originalUrl = article.galleryUrls[i];
+                                    if (originalUrl && originalUrl.trim()) {
+                                        const normalizedOriginal = normalizeImageUrl(originalUrl.trim());
+                                        if (normalizedOriginal === url) {
+                                            originalIndex = i;
+                                            break;
+                                        }
+                                    }
                                 }
+                                
+                                // If we found a match, check for caption
+                                if (originalIndex >= 0 && article.galleryCaptions && article.galleryCaptions[originalIndex]) {
+                                    const caption = article.galleryCaptions[originalIndex];
+                                    if (caption.enabled && caption.text && caption.text.trim()) {
+                                        captionText = caption.text.trim();
+                                        altText = captionText; // Use caption as alt text
+                                    }
+                                }
+                                
+                                // Always add entries - even if empty
+                                galleryCaptionsArray.push(captionText ? '"' + escapeJsString(captionText) + '"' : '""');
+                                galleryAltTextsArray.push('"' + escapeJsString(altText) + '"');
                             });
                             const galleryCaptionsString = galleryCaptionsArray.join(',\n      ');
                             const galleryAltTextsString = galleryAltTextsArray.join(',\n      ');
