@@ -140,6 +140,18 @@
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
+        /* --- FIX: Force Thank The Donor + Employee Spotlight to stack on mobile --- */
+        @media (max-width: 980px){
+            .side-by-side-container{
+                grid-template-columns: 1fr !important;
+            }
+            .side-by-side-container .thank-donor-section,
+            .side-by-side-container .bottom-spotlight{
+                grid-column: 1 / -1 !important;
+                grid-row: auto !important;
+                width: 100% !important;
+            }
+        }
     </style>
 </head>
 <body>
